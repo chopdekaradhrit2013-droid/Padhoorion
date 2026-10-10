@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Environment files with sensitive credentials
+.env
+
+# Logs and development simulator output
+*.log
+simulated_emails.log
+.DS_Store
