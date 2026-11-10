@@ -22,7 +22,7 @@ export function formatFileSize(bytes: number): string {
 
 /**
  * Requirement 7: The user's selected grade must appear beside their username
- * everywhere their identity appears. Example: "Adhrit [7th Grade]"
+ * everywhere their identity appears. Example: "Name [7th Grade]"
  */
 export function formatUserWithGrade(username: string, grade: string): string {
   if (!grade) return username;
@@ -30,7 +30,7 @@ export function formatUserWithGrade(username: string, grade: string): string {
 }
 
 /**
- * Returns initials from a username, e.g. "Adhrit" -> "A", "John Doe" -> "JD"
+ * Returns initials from a username, e.g. "Name" -> "N", "John Doe" -> "JD"
  */
 export function getInitials(name: string): string {
   if (!name) return "P";

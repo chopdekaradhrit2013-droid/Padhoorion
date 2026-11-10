@@ -42,11 +42,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoFill = (demoId: string, demoPass: string) => {
-    setIdentifier(demoId);
-    setPassword(demoPass);
-  };
-
   return (
     <div className="max-w-md mx-auto my-8 sm:my-12">
       <div className="bg-white border border-slate-200 rounded-2xl shadow-xl p-6 sm:p-8">
@@ -82,7 +77,7 @@ export default function LoginPage() {
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="e.g. Adhrit or student@padhoorion.edu"
+                placeholder="e.g. Name or student@padhoorion.edu"
                 className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
               />
               <User className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
@@ -141,32 +136,6 @@ export default function LoginPage() {
             )}
           </button>
         </form>
-
-        {/* Demo Fast Login Pills */}
-        <div className="mt-6 pt-5 border-t border-slate-100">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 text-center">
-            One-Click Demo Logins
-          </p>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <button
-              type="button"
-              onClick={() => handleDemoFill("Adhrit", "Student@123")}
-              className="p-2.5 border border-slate-200 rounded-xl bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-200 text-slate-800 text-left transition-all"
-            >
-              <div className="font-bold text-slate-900">Adhrit</div>
-              <div className="text-[10px] text-indigo-600 font-semibold">7th Grade Student</div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleDemoFill("principal_orion", "Admin@123")}
-              className="p-2.5 border border-slate-200 rounded-xl bg-slate-50 hover:bg-rose-50/50 hover:border-rose-200 text-slate-800 text-left transition-all"
-            >
-              <div className="font-bold text-rose-700">Principal Orion</div>
-              <div className="text-[10px] text-slate-500 font-semibold">School Admin</div>
-            </button>
-          </div>
-        </div>
 
         <div className="mt-6 text-center text-xs text-slate-500 font-medium">
           Don't have an account yet?{" "}

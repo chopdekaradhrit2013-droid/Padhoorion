@@ -23,22 +23,21 @@ async function main() {
   // 1. Create Administrator
   const adminUser = await prisma.user.create({
     data: {
-      username: 'principal_orion',
-      email: 'admin@padhoorion.edu',
+      username: 'adhrit',
+      email: 'chopdekaradhrit2013@gmail.com',
       passwordHash: adminHash,
       grade: '10th Grade',
       role: 'ADMIN',
       isVerified: true,
-      bio: 'Head of Academics & Student Moderator. Welcome to PadhoOrion knowledge exchange!',
+      bio: 'Administrator of PadhoOrion school community.',
     },
   });
 
   // 2. Create Students across grades
-  // Adhrit (7th Grade) - prominently featured in user prompt
   const adhrit = await prisma.user.create({
     data: {
-      username: 'Adhrit',
-      email: 'adhrit@padhoorion.edu',
+      username: 'kabir_sharma',
+      email: 'kabir@padhoorion.edu',
       passwordHash: studentHash,
       grade: '7th Grade',
       role: 'STUDENT',

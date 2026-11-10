@@ -106,7 +106,7 @@ const sampleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1
   <text x="110" y="740" font-family="Georgia, serif" font-size="15" fill="#7d6b56">Always label x-axis and y-axis with proper scaling in exam graph sheets.</text>
   <text x="110" y="775" font-family="Georgia, serif" font-size="15" fill="#7d6b56">Double check negative signs when substituting into the distance formula.</text>
   
-  <text x="80" y="910" font-family="system-ui, sans-serif" font-size="13" fill="#7d6b56">Uploaded to PadhoOrion by Adhrit [7th Grade] - Community Verified</text>
+  <text x="80" y="910" font-family="system-ui, sans-serif" font-size="13" fill="#7d6b56">Uploaded to PadhoOrion by Student [7th Grade] - Community Verified</text>
 </svg>`;
 
 fs.writeFileSync(path.join(uploadsDir, 'sample-handwritten-preview.svg'), sampleSvg);

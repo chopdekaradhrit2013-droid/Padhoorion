@@ -119,7 +119,7 @@ export function LandingPage() {
                   Full step-by-step Cartesian plane drills with solved examples from lesson 4.
                 </p>
                 <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-white/60">
-                  <span>Adhrit [7th Grade]</span>
+                  <span>Student [7th Grade]</span>
                   <span className="text-[#e4bfaf]">12 Downloads</span>
                 </div>
               </div>
@@ -267,7 +267,7 @@ export function LandingPage() {
               Grade Tagged Everywhere
             </h3>
             <p className="text-xs sm:text-sm text-slate-600 font-sans leading-relaxed">
-              Every author has their current standing attached to comments, notes, and profiles (e.g. <code>Adhrit [7th Grade]</code>), building transparent peer collaboration.
+              Every author has their current standing attached to comments, notes, and profiles (e.g. <code>Student [7th Grade]</code>), building transparent peer collaboration.
             </p>
           </div>
 

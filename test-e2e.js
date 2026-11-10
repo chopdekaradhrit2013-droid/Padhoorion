@@ -89,17 +89,17 @@ async function runTests() {
     // 2. Student Authentication (Adhrit 7th Grade)
     console.log('\nTesting Authentication & Sessions...');
     const loginRes = await request('POST', '/api/auth/login', {
-      identifier: 'Adhrit',
+      identifier: 'kabir_sharma',
       password: 'Student@123',
     });
-    assert(loginRes.status === 200 && loginRes.data.user.username === 'Adhrit', 'Student login succeeds');
+    assert(loginRes.status === 200 && loginRes.data.user.username === 'kabir_sharma', 'Student login succeeds');
     assert(loginRes.data.user.grade.includes('Grade'), 'Student grade is a valid Grade tag');
 
     const studentCookie = parseCookies(loginRes);
 
     // Verify /api/auth/me with session cookie
     const meRes = await request('GET', '/api/auth/me', null, { Cookie: studentCookie });
-    assert(meRes.status === 200 && meRes.data.user.username === 'Adhrit', 'Session cookie maintains logged-in state');
+    assert(meRes.status === 200 && meRes.data.user.username === 'kabir_sharma', 'Session cookie maintains logged-in state');
 
     // 3. User Registration
     console.log('\nTesting Public Registration...');
@@ -184,15 +184,15 @@ async function runTests() {
 
     // 11. Public User Profile
     console.log('\nTesting Public User Profile...');
-    const profileRes = await request('GET', `/api/users/profile?username=Adhrit`, null, { Cookie: studentCookie });
-    assert(profileRes.status === 200 && profileRes.data.user.username === 'Adhrit', 'Public user profile returns user data');
+    const profileRes = await request('GET', `/api/users/profile?username=kabir_sharma`, null, { Cookie: studentCookie });
+    assert(profileRes.status === 200 && profileRes.data.user.username === 'kabir_sharma', 'Public user profile returns user data');
     assert(profileRes.data.user.grade === '8th Grade', 'Public profile displays live grade tag');
     assert(profileRes.data.user.activities.some((a) => a.type === 'GRADE_CHANGE'), 'Activity history records academic grade progression');
 
     // 12. Admin Features (Requirement 10)
     console.log('\nTesting Admin Console & Security...');
     const adminLogin = await request('POST', '/api/auth/login', {
-      identifier: 'principal_orion',
+      identifier: 'chopdekaradhrit2013@gmail.com',
       password: 'Admin@123',
     });
     assert(adminLogin.status === 200 && adminLogin.data.user.role === 'ADMIN', 'Admin login succeeds');

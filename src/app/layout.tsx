@@ -10,9 +10,12 @@ export const metadata: Metadata = {
   description:
     "A school-wide educational community where students upload, discover, download, discuss, and share verified notes, worksheets, and study resources across 6th to 10th grades.",
   icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
-    apple: "/logo.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
   },
 };
 
