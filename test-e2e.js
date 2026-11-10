@@ -193,7 +193,7 @@ async function runTests() {
     console.log('\nTesting Admin Console & Security...');
     const adminLogin = await request('POST', '/api/auth/login', {
       identifier: 'chopdekaradhrit2013@gmail.com',
-      password: 'Admin@123',
+      password: 'HALAMADRID123',
     });
     assert(adminLogin.status === 200 && adminLogin.data.user.role === 'ADMIN', 'Admin login succeeds');
     const adminCookie = parseCookies(adminLogin);

@@ -18,12 +18,12 @@ async function main() {
   await prisma.user.deleteMany({});
 
   const studentHash = bcrypt.hashSync('Student@123', 10);
-  const adminHash = bcrypt.hashSync('Admin@123', 10);
+  const adminHash = bcrypt.hashSync('HALAMADRID123', 10);
 
   // 1. Create Administrator
   const adminUser = await prisma.user.create({
     data: {
-      username: 'adhrit',
+      username: 'Adhrit',
       email: 'chopdekaradhrit2013@gmail.com',
       passwordHash: adminHash,
       grade: '10th Grade',
