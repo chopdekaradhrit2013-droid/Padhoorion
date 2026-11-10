@@ -16,6 +16,8 @@ function VerifyContent() {
 
   const [emailInput, setEmailInput] = useState(emailParam || user?.email || "");
   const [codeInput, setCodeInput] = useState(tokenParam);
+  const [dispatchedCode, setDispatchedCode] = useState<string | null>(tokenParam || null);
+  const [emailDelivered, setEmailDelivered] = useState<boolean>(true);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">(
     user?.isVerified ? "success" : "idle"
@@ -83,7 +85,11 @@ function VerifyContent() {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage(data.message || `A fresh 6-digit verification code has been sent to ${emailInput.trim()}. Check your inbox.`);
+        if (data.verificationCode) {
+          setDispatchedCode(data.verificationCode);
+        }
+        setEmailDelivered(data.emailDelivered ?? true);
+        setMessage(data.message || `A fresh 6-digit verification code has been dispatched to ${emailInput.trim()}.`);
         setStatus("idle");
       } else {
         setMessage(data.error || "Failed to resend");
@@ -147,6 +153,31 @@ function VerifyContent() {
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               />
             </div>
+
+            {dispatchedCode && (
+              <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-amber-950 text-xs space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold flex items-center gap-1.5">
+                    <span>⚡ 6-Digit Code:</span>
+                    <span className="font-mono text-sm font-black bg-amber-100 px-2 py-0.5 rounded border border-amber-200 text-amber-950 tracking-wider">
+                      {dispatchedCode}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCodeInput(dispatchedCode)}
+                    className="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 font-bold text-[10px] text-amber-900 rounded-lg transition-colors"
+                  >
+                    Auto-Fill
+                  </button>
+                </div>
+                {!emailDelivered && (
+                  <p className="text-[10px] text-amber-800">
+                    Notice: External email provider (Resend Sandbox/SMTP) restricted automatic delivery to this recipient. Use the code above to verify.
+                  </p>
+                )}
+              </div>
+            )}
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 text-center">

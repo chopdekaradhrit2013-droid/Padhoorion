@@ -34,6 +34,8 @@ export default function RegisterPage() {
 
   // Verification step state
   const [verificationCodeInput, setVerificationCodeInput] = useState("");
+  const [dispatchedCode, setDispatchedCode] = useState<string | null>(null);
+  const [emailDelivered, setEmailDelivered] = useState<boolean>(true);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +78,15 @@ export default function RegisterPage() {
       // Transition to Email Verification Step
       setVerificationCodeInput("");
       setStep("verify");
-      setSuccessNotice(`Verification code sent to ${email}! Please check your Gmail inbox.`);
+      if (data.verificationCode) {
+        setDispatchedCode(data.verificationCode);
+      }
+      setEmailDelivered(data.emailDelivered ?? true);
+      if (data.emailDelivered) {
+        setSuccessNotice(`Verification code sent to ${email}! Please check your Gmail inbox.`);
+      } else {
+        setSuccessNotice(`Account registered! 6-digit verification code generated.`);
+      }
     } catch (err: any) {
       setError(err.message || "Failed to register");
     } finally {
@@ -132,8 +142,15 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setVerificationCodeInput("");
-        setSuccessNotice(`A fresh 6-digit verification code has been dispatched to ${email}. Check your inbox.`);
+        if (data.verificationCode) {
+          setDispatchedCode(data.verificationCode);
+        }
+        setEmailDelivered(data.emailDelivered ?? true);
+        if (data.emailDelivered) {
+          setSuccessNotice(`A fresh 6-digit verification code has been dispatched to ${email}. Check your inbox.`);
+        } else {
+          setSuccessNotice(`A fresh 6-digit verification code has been generated.`);
+        }
       } else {
         setError(data.error || "Failed to resend code");
       }
@@ -227,6 +244,32 @@ export default function RegisterPage() {
                 We sent your 6-digit verification code to your email inbox. Please check your inbox (including Spam & Promotions) and enter the 6 digits below.
               </p>
             </div>
+
+            {/* Sandbox / Fallback Dispatch Display */}
+            {dispatchedCode && (
+              <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-xl text-amber-950 text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold flex items-center gap-1.5">
+                    <span>⚡ 6-Digit Code:</span>
+                    <span className="font-mono text-sm font-black bg-amber-100 px-2 py-0.5 rounded border border-amber-200 text-amber-950 tracking-wider">
+                      {dispatchedCode}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setVerificationCodeInput(dispatchedCode)}
+                    className="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 font-bold text-[11px] text-amber-900 rounded-lg transition-colors shadow-2xs"
+                  >
+                    Auto-Fill
+                  </button>
+                </div>
+                {!emailDelivered && (
+                  <p className="text-[11px] text-amber-800 leading-tight">
+                    Notice: External email provider (Resend Sandbox/SMTP) restricted automated inbox delivery for this address. Use the code above to verify.
+                  </p>
+                )}
+              </div>
+            )}
 
             <form onSubmit={handleVerifyCode} className="space-y-4">
               <div>
