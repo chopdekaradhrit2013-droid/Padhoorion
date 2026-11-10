@@ -22,7 +22,6 @@ import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
 
 export default function RegisterPage() {
-  const [step, setStep] = useState<"form" | "verify">("form");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,11 +30,6 @@ export default function RegisterPage() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // Verification step state
-  const [verificationCodeInput, setVerificationCodeInput] = useState("");
-  const [dispatchedCode, setDispatchedCode] = useState<string | null>(null);
-  const [emailDelivered, setEmailDelivered] = useState<boolean>(true);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,87 +69,17 @@ export default function RegisterPage() {
         throw new Error(data.error || "Failed to register");
       }
 
-      // Transition to Email Verification Step
-      setVerificationCodeInput("");
-      setStep("verify");
-      if (data.verificationCode) {
-        setDispatchedCode(data.verificationCode);
-      }
-      setEmailDelivered(data.emailDelivered ?? true);
-      if (data.emailDelivered) {
-        setSuccessNotice(`Verification code sent to ${email}! Please check your Gmail inbox.`);
-      } else {
-        setSuccessNotice(`Account registered! 6-digit verification code generated.`);
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to register");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setSuccessNotice(null);
-
-    try {
-      const res = await fetch("/api/auth/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.toLowerCase().trim(),
-          code: verificationCodeInput.trim(),
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Verification failed");
-      }
-
-      setSuccessNotice("Email verified successfully! Welcome to PadhoOrion.");
+      setSuccessNotice("Account created successfully! Welcome to PadhoOrion.");
       await refreshUser();
 
       setTimeout(() => {
         router.push("/");
         router.refresh();
-      }, 1000);
+      }, 700);
     } catch (err: any) {
-      setError(err.message || "Failed to verify code");
+      setError(err.message || "Failed to register");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    setError(null);
-    try {
-      const res = await fetch("/api/auth/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "resend",
-          email: email.toLowerCase().trim(),
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        if (data.verificationCode) {
-          setDispatchedCode(data.verificationCode);
-        }
-        setEmailDelivered(data.emailDelivered ?? true);
-        if (data.emailDelivered) {
-          setSuccessNotice(`A fresh 6-digit verification code has been dispatched to ${email}. Check your inbox.`);
-        } else {
-          setSuccessNotice(`A fresh 6-digit verification code has been generated.`);
-        }
-      } else {
-        setError(data.error || "Failed to resend code");
-      }
-    } catch (e: any) {
-      setError(e.message || "Error resending code");
     }
   };
 
@@ -169,12 +93,10 @@ export default function RegisterPage() {
             className="w-16 h-16 rounded-2xl object-contain mx-auto mb-3 shadow-sm border border-slate-200"
           />
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            {step === "verify" ? "Verify Student Email" : "Join PadhoOrion Community"}
+            Join PadhoOrion Community
           </h1>
           <p className="text-xs text-slate-500 mt-1 font-sans">
-            {step === "verify"
-              ? "Confirm your email address to activate your account and start collaborating."
-              : "Create your student account to share and download school resources."}
+            Create your student account to share and download school resources.
           </p>
         </div>
 
@@ -185,37 +107,10 @@ export default function RegisterPage() {
               <span className="font-semibold">{error}</span>
             </div>
             {error.includes("already registered") && (
-              <div className="mt-3 pt-2.5 border-t border-rose-200/80 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    setError(null);
-                    setLoading(true);
-                    try {
-                      const res = await fetch("/api/auth/verify", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ action: "resend", email: email.toLowerCase().trim() }),
-                      });
-                      const data = await res.json();
-                      if (res.ok) {
-                        setStep("verify");
-                        setSuccessNotice(`Fresh 6-digit verification code dispatched to ${email}! Check your Gmail inbox now.`);
-                      } else {
-                        setError(data.error || "Failed to send verification code");
-                      }
-                    } catch (e: any) {
-                      setError(e.message);
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}
-                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
-                >
-                  📩 Send Verification Code to {email || "this email"} Now
-                </button>
-                <Link href="/login" className="text-xs text-rose-800 underline hover:text-rose-950 font-medium ml-1">
-                  or Log in
+              <div className="mt-3 pt-2.5 border-t border-rose-200/80 flex items-center justify-between gap-2">
+                <span className="text-xs text-rose-800 font-medium">Already have an account?</span>
+                <Link href="/login" className="px-3 py-1 bg-[#c96442] hover:bg-[#b05536] text-white rounded-lg text-xs font-bold transition shadow-xs">
+                  Log in to PadhoOrion &rarr;
                 </Link>
               </div>
             )}
@@ -229,95 +124,8 @@ export default function RegisterPage() {
           </div>
         )}
 
-        {/* STEP 2: VERIFICATION CODE FORM */}
-        {step === "verify" ? (
-          <div className="space-y-5">
-            <div className="p-4 bg-indigo-50 border border-indigo-100 text-indigo-950 rounded-xl text-center space-y-2 shadow-xs">
-              <div className="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center mx-auto shadow-sm">
-                <Mail className="w-5 h-5 text-white" />
-              </div>
-              <p className="text-xs font-bold text-indigo-900">
-                Check Your Gmail / Email Inbox
-              </p>
-              <p className="text-sm font-black text-indigo-950 font-mono">{email}</p>
-              <p className="text-[11px] text-slate-600 leading-relaxed pt-1">
-                We sent your 6-digit verification code to your email inbox. Please check your inbox (including Spam & Promotions) and enter the 6 digits below.
-              </p>
-            </div>
-
-            {/* Sandbox / Fallback Dispatch Display */}
-            {dispatchedCode && (
-              <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-xl text-amber-950 text-xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold flex items-center gap-1.5">
-                    <span>⚡ 6-Digit Code:</span>
-                    <span className="font-mono text-sm font-black bg-amber-100 px-2 py-0.5 rounded border border-amber-200 text-amber-950 tracking-wider">
-                      {dispatchedCode}
-                    </span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setVerificationCodeInput(dispatchedCode)}
-                    className="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 font-bold text-[11px] text-amber-900 rounded-lg transition-colors shadow-2xs"
-                  >
-                    Auto-Fill
-                  </button>
-                </div>
-                {!emailDelivered && (
-                  <p className="text-[11px] text-amber-800 leading-tight">
-                    Notice: External email provider (Resend Sandbox/SMTP) restricted automated inbox delivery for this address. Use the code above to verify.
-                  </p>
-                )}
-              </div>
-            )}
-
-            <form onSubmit={handleVerifyCode} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 text-center">
-                  Enter 6-Digit Code *
-                </label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  required
-                  value={verificationCodeInput}
-                  onChange={(e) => setVerificationCodeInput(e.target.value.replace(/\D/g, ""))}
-                  placeholder="000000"
-                  className="w-full text-center tracking-[0.5em] font-mono text-2xl py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all font-bold"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || verificationCodeInput.length < 6}
-                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {loading ? "Activating Account..." : "Verify & Activate Account"}
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              <div className="flex items-center justify-between pt-2 text-xs">
-                <button
-                  type="button"
-                  onClick={handleResendCode}
-                  className="text-indigo-600 hover:underline font-semibold flex items-center gap-1"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  <span>Resend Code</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStep("form")}
-                  className="text-slate-500 hover:text-slate-700 font-medium"
-                >
-                  Edit Account Details
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : (
-          /* STEP 1: REGISTRATION DETAILS FORM */
-          <form onSubmit={handleRegister} className="space-y-4">
+        {/* REGISTRATION DETAILS FORM */}
+        <form onSubmit={handleRegister} className="space-y-4">
             {/* Username */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
@@ -356,7 +164,7 @@ export default function RegisterPage() {
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
               </div>
               <p className="text-[11px] text-slate-500 mt-1">
-                Your 6-digit code will be emailed here. (Gmail plus alias like <span className="font-mono text-terracotta font-semibold">yourname+student@gmail.com</span> works instantly!)
+                We&apos;ll use this for your student login and community notifications.
               </p>
             </div>
 
@@ -467,7 +275,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
+              className="w-full py-2.5 px-4 bg-[#c96442] hover:bg-[#b05536] text-white font-bold text-sm rounded-xl shadow-md shadow-[#c96442]/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
             >
               {loading ? (
                 <>
@@ -475,11 +283,10 @@ export default function RegisterPage() {
                   Creating Account...
                 </>
               ) : (
-                "Continue to Verification"
+                "Create Free Student Account"
               )}
             </button>
           </form>
-        )}
 
         <div className="mt-6 text-center text-xs text-slate-500 font-medium">
           Already have an account?{" "}

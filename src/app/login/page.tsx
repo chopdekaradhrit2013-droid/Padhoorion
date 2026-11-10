@@ -12,7 +12,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const { refreshUser } = useAuth();
   const router = useRouter();
 
@@ -20,7 +19,6 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setUnverifiedEmail(null);
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -31,9 +29,6 @@ export default function LoginPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        if (data.requiresVerification && data.email) {
-          setUnverifiedEmail(data.email);
-        }
         throw new Error(data.error || "Login failed");
       }
 
@@ -65,22 +60,9 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm rounded-xl space-y-2">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span className="font-medium">{error}</span>
-            </div>
-            {unverifiedEmail && (
-              <div className="pt-1">
-                <Link
-                  href={`/verify?email=${encodeURIComponent(unverifiedEmail)}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs"
-                >
-                  <span>Verify Email Now (6-Digit Code)</span>
-                  <span aria-hidden="true">&rarr;</span>
-                </Link>
-              </div>
-            )}
+          <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm rounded-xl flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span className="font-medium">{error}</span>
           </div>
         )}
 

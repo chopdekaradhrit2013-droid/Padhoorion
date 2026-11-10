@@ -74,46 +74,10 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
-      // If the email is already registered, allow re-verification / testing!
       if (existingUser.email.toLowerCase() === cleanEmail.toLowerCase()) {
-        const passwordHash = await hashPassword(password);
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-        const updated = await prisma.user.update({
-          where: { id: existingUser.id },
-          data: {
-            passwordHash,
-            verificationToken: verificationCode,
-            isVerified: false,
-            grade: grade || existingUser.grade,
-          },
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            grade: true,
-            role: true,
-            avatarUrl: true,
-            isVerified: true,
-          },
-        });
-
-        // Send verification code directly to user's real email inbox
-        const emailResult = await sendVerificationEmail({
-          to: cleanEmail,
-          username: existingUser.username,
-          code: verificationCode,
-        });
-
         return NextResponse.json(
-          {
-            message: `A 6-digit verification code has been sent to your email inbox (${cleanEmail}).`,
-            user: updated,
-            requiresVerification: true,
-            emailDelivered: emailResult.delivered,
-            verificationCode,
-          },
-          { status: 201 }
+          { error: "This email is already registered. Please log in directly." },
+          { status: 409 }
         );
       }
 
@@ -126,9 +90,8 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await hashPassword(password);
-    // Generate 6-digit verification code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
+    // Create user directly verified - no email code verification required!
     const user = await prisma.user.create({
       data: {
         username: cleanUsername,
@@ -137,8 +100,8 @@ export async function POST(request: Request) {
         grade,
         avatarUrl: avatarUrl || null,
         role: "STUDENT",
-        isVerified: false,
-        verificationToken: verificationCode,
+        isVerified: true,
+        verificationToken: null,
       },
       select: {
         id: true,
@@ -151,23 +114,33 @@ export async function POST(request: Request) {
       },
     });
 
-    // Send verification code directly to user's real email inbox (e.g. Gmail)
-    const emailResult = await sendVerificationEmail({
-      to: cleanEmail,
-      username: cleanUsername,
-      code: verificationCode,
+    // Create session token and log in immediately
+    const token = await createSessionToken({
+      userId: user.id,
+      username: user.username,
+      email: user.email,
+      grade: user.grade,
+      role: user.role,
     });
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
-        message: `A 6-digit verification code has been sent to your email inbox (${cleanEmail}).`,
+        message: "Account created successfully! Welcome to PadhoOrion.",
         user,
-        requiresVerification: true,
-        emailDelivered: emailResult.delivered,
-        verificationCode,
+        requiresVerification: false,
       },
       { status: 201 }
     );
+
+    response.cookies.set(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      path: "/",
+    });
+
+    return response;
   } catch (error: any) {
     console.error("Registration error:", error);
     return NextResponse.json(

@@ -52,15 +52,12 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!user.isVerified && user.role !== "ADMIN") {
-      return NextResponse.json(
-        {
-          error: "Your email address has not been verified yet. Please enter your 6-digit verification code to activate your account.",
-          requiresVerification: true,
-          email: user.email,
-        },
-        { status: 403 }
-      );
+    // Auto-verify user if not already verified
+    if (!user.isVerified) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { isVerified: true },
+      });
     }
 
     const token = await createSessionToken({
