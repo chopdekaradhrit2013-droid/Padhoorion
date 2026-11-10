@@ -16,6 +16,7 @@ const PUBLIC_PAGE_ROUTES = [
   "/register",
   "/forgot-password",
   "/verify",
+  "/grades",
 ];
 
 // Public API routes accessible without login
@@ -60,11 +61,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Allow public landing page and auth pages
-  const isPublicPage = PUBLIC_PAGE_ROUTES.includes(pathname);
-  const isPublicApi = PUBLIC_API_PREFIXES.some((prefix) =>
-    pathname.startsWith(prefix)
-  );
+  // Allow public landing page, auth pages, and grades browsing
+  const isPublicPage = PUBLIC_PAGE_ROUTES.includes(pathname) || pathname.startsWith("/grades");
+  const isPublicApi =
+    PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
+    (pathname.startsWith("/api/resources") && request.method === "GET");
 
   if (isPublicPage || isPublicApi) {
     return NextResponse.next();

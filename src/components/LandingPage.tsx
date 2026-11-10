@@ -19,11 +19,15 @@ import {
   Zap,
   Flame,
   Search,
+  Upload,
+  LayoutDashboard,
 } from "lucide-react";
 import KineticGrid from "@/components/ui/kinetic-grid";
 import { GRADES, CATEGORIES } from "@/lib/constants";
+import { useAuth } from "@/context/AuthContext";
 
 export function LandingPage() {
+  const { user } = useAuth();
   const gradeDetails = [
     {
       grade: "6th Grade",
@@ -129,22 +133,44 @@ export function LandingPage() {
           </div>
 
           {/* Action CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto pt-2">
-            <Link
-              href="/register"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-[#c96442]/25 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
-            >
-              <span>Join PadhoOrion Free</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto pt-2 relative z-20">
+            {user ? (
+              <>
+                <Link
+                  href="/"
+                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-[#c96442]/25 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Go to My Dashboard</span>
+                </Link>
 
-            <Link
-              href="/login"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white hover:bg-[#faf9f5] text-[#292524] font-bold text-sm sm:text-base border border-[#e2ded5] shadow-xs transition-all flex items-center justify-center gap-2"
-            >
-              <Lock className="w-4 h-4 text-[#c96442]" />
-              <span>Student Sign In</span>
-            </Link>
+                <Link
+                  href="/upload"
+                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white hover:bg-[#faf9f5] text-[#292524] font-bold text-sm sm:text-base border border-[#e2ded5] shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Upload className="w-4 h-4 text-[#c96442]" />
+                  <span>Upload Study Notes</span>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/register"
+                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-[#c96442]/25 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                >
+                  <span>Join PadhoOrion Free</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+
+                <Link
+                  href="/login"
+                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white hover:bg-[#faf9f5] text-[#292524] font-bold text-sm sm:text-base border border-[#e2ded5] shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Lock className="w-4 h-4 text-[#c96442]" />
+                  <span>Student Sign In</span>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Value Props Strip */}
@@ -211,8 +237,8 @@ export function LandingPage() {
                 </div>
 
                 <Link
-                  href="/register"
-                  className="mt-3 inline-flex items-center justify-between w-full py-2 px-3.5 rounded-xl bg-[#faf8f5] hover:bg-[#c96442] hover:text-white text-xs font-bold text-[#c96442] transition-all border border-[#ebdccc] group-hover:border-[#c96442] shadow-2xs"
+                  href={`/grades/${encodeURIComponent(item.grade)}`}
+                  className="mt-3 inline-flex items-center justify-between w-full py-2.5 px-3.5 rounded-xl bg-[#faf8f5] hover:bg-[#c96442] hover:text-white text-xs font-bold text-[#c96442] transition-all border border-[#ebdccc] group-hover:border-[#c96442] shadow-2xs relative z-20 cursor-pointer"
                 >
                   <span>Explore {item.grade} Notes</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -235,10 +261,10 @@ export function LandingPage() {
               </div>
 
               <Link
-                href="/register"
-                className="w-full py-2.5 px-4 rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white font-bold text-xs text-center transition-all shadow-md shadow-[#c96442]/20"
+                href="/grades"
+                className="w-full py-2.5 px-4 rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white font-bold text-xs text-center transition-all shadow-md shadow-[#c96442]/20 relative z-20 cursor-pointer"
               >
-                Create Account to Access All
+                {user ? "Explore All Grade Hubs" : "Browse All Grades"}
               </Link>
             </div>
           </div>
@@ -303,8 +329,8 @@ export function LandingPage() {
                 </p>
               </div>
               <Link
-                href="/register"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c96442] hover:text-[#a84f32] transition-colors"
+                href={user ? "/upload" : "/login"}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c96442] hover:text-[#a84f32] transition-colors relative z-20 cursor-pointer"
               >
                 <span>Upload your first note</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -346,21 +372,42 @@ export function LandingPage() {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-            <Link
-              href="/register"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-[#c96442]/30 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
-            >
-              <span>Create Free Student Account</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2 relative z-20">
+            {user ? (
+              <>
+                <Link
+                  href="/upload"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-[#c96442]/30 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Upload Study Notes</span>
+                </Link>
 
-            <Link
-              href="/login"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white hover:bg-[#faf9f5] text-[#292524] font-bold text-sm sm:text-base border border-[#e2ded5] shadow-xs transition-all flex items-center justify-center gap-2"
-            >
-              <span>Log In to PadhoOrion</span>
-            </Link>
+                <Link
+                  href="/grades"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white hover:bg-[#faf9f5] text-[#292524] font-bold text-sm sm:text-base border border-[#e2ded5] shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Browse All Grades</span>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/register"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-[#c96442]/30 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+                >
+                  <span>Create Free Student Account</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+
+                <Link
+                  href="/login"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white hover:bg-[#faf9f5] text-[#292524] font-bold text-sm sm:text-base border border-[#e2ded5] shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Log In to PadhoOrion</span>
+                </Link>
+              </>
+            )}
           </div>
         </section>
 
