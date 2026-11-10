@@ -56,11 +56,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect logged-in users away from auth pages to home dashboard
-  if (isAuthenticated && (pathname === "/login" || pathname === "/register")) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
   // Allow public landing page, auth pages, and grades browsing
   const isPublicPage = PUBLIC_PAGE_ROUTES.includes(pathname) || pathname.startsWith("/grades");
   const isPublicApi =

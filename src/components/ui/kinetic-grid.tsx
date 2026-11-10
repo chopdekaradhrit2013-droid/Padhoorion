@@ -400,10 +400,16 @@ export default function KineticGrid({
     >
       <canvas
         ref={canvasRef}
+        style={{ pointerEvents: "none" }}
         className="fixed inset-0 w-full h-full z-0 pointer-events-none"
       />
 
-      <div className="relative z-10 w-full h-full pointer-events-auto">{children}</div>
+      <div
+        style={{ pointerEvents: "auto" }}
+        className="relative z-10 w-full h-full pointer-events-auto"
+      >
+        {children}
+      </div>
     </div>
   );
 }
