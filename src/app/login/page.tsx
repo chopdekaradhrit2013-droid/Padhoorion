@@ -95,7 +95,7 @@ export default function LoginPage() {
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="e.g. Name or student@padhoorion.edu"
+                placeholder="e.g. Name or yourname@gmail.com"
                 className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
               />
               <User className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />

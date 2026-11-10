@@ -83,10 +83,7 @@ function VerifyContent() {
       });
       const data = await res.json();
       if (res.ok) {
-        if (data.verificationCode) {
-          setCodeInput(data.verificationCode);
-        }
-        setMessage(data.message);
+        setMessage(data.message || `A fresh 6-digit verification code has been sent to ${emailInput.trim()}. Check your inbox.`);
         setStatus("idle");
       } else {
         setMessage(data.error || "Failed to resend");
@@ -109,7 +106,7 @@ function VerifyContent() {
           Email Verification
         </h1>
         <p className="text-xs text-slate-500 mt-1 font-sans mb-6">
-          Verifying your educational email ensures a trustworthy academic community.
+          Verifying your email ensures a safe and trustworthy student community.
         </p>
 
         {status === "success" || user?.isVerified ? (
@@ -119,7 +116,7 @@ function VerifyContent() {
               <span>Email Verified & Account Active</span>
             </div>
             <p className="text-xs">
-              {message || "Your school email has been officially verified."}
+              {message || "Your email has been officially verified."}
             </p>
             <Link
               href="/"
@@ -146,7 +143,7 @@ function VerifyContent() {
                 type="email"
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
-                placeholder="student@padhoorion.edu"
+                placeholder="e.g. yourname@gmail.com"
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               />
             </div>

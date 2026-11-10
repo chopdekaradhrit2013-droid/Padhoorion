@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserFromRequest } from "@/lib/server-auth";
 import { createSessionToken, COOKIE_NAME } from "@/lib/auth";
+import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -29,9 +30,16 @@ export async function POST(request: Request) {
         data: { verificationToken: newCode },
       });
 
+      // Dispatch new code to Gmail/inbox
+      await sendVerificationEmail({
+        to: cleanEmail,
+        username: existingUser.username,
+        code: newCode,
+      });
+
       return NextResponse.json({
         success: true,
-        message: `A new 6-digit verification code has been issued: ${newCode}`,
+        message: `A new 6-digit verification code has been sent to your inbox (${cleanEmail}).`,
         verificationCode: newCode,
       });
     }

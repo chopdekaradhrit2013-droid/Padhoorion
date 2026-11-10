@@ -95,7 +95,7 @@ async function runTests() {
     // 3. Student Registration with 6-Digit Email Verification
     console.log('\n3. Testing Student Registration & Email Verification...');
     const testStudentName = `student_${Date.now().toString().slice(-4)}`;
-    const studentEmail = `${testStudentName}@padhoorion.edu`;
+    const studentEmail = `${testStudentName}@gmail.com`;
 
     const regRes = await request('POST', '/api/auth/register', {
       username: testStudentName,
