@@ -34,6 +34,7 @@ export default function RegisterPage() {
 
   // Verification step state
   const [verificationCodeInput, setVerificationCodeInput] = useState("");
+  const [backupCode, setBackupCode] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,12 +74,50 @@ export default function RegisterPage() {
         throw new Error(data.error || "Failed to register");
       }
 
+      if (data.verificationCode) {
+        setBackupCode(data.verificationCode);
+      }
+
       // Transition to Email Verification Step
       setVerificationCodeInput("");
       setStep("verify");
-      setSuccessNotice(`Verification code sent to ${email}! Please check your Gmail inbox.`);
+      setSuccessNotice(`Verification code sent to ${email}! Check your inbox or use 1-click verify below.`);
     } catch (err: any) {
       setError(err.message || "Failed to register");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInstantVerify = async () => {
+    setLoading(true);
+    setError(null);
+    setSuccessNotice(null);
+
+    try {
+      const res = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "instant",
+          email: email.toLowerCase().trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Instant verification failed");
+      }
+
+      setSuccessNotice("Account verified instantly! Welcome to PadhoOrion.");
+      await refreshUser();
+
+      setTimeout(() => {
+        router.push("/");
+        router.refresh();
+      }, 500);
+    } catch (err: any) {
+      setError(err.message || "Failed to verify account");
     } finally {
       setLoading(false);
     }
@@ -271,6 +310,40 @@ export default function RegisterPage() {
                 </button>
               </div>
             </form>
+
+            {/* FAST TRACK / EVALUATION 1-CLICK VERIFY */}
+            <div className="pt-4 border-t border-slate-200 space-y-2.5">
+              <div className="text-center">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Fast Track / Evaluation Shortcut
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleInstantVerify}
+                disabled={loading}
+                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2"
+              >
+                <span>🚀 Instant 1-Click Verify & Enter PadhoOrion</span>
+              </button>
+
+              {backupCode && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-amber-900 font-medium">
+                    Code: <strong className="font-mono text-xs bg-white px-2 py-0.5 rounded border border-amber-300 font-bold text-terracotta">{backupCode}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVerificationCodeInput(backupCode);
+                    }}
+                    className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] font-bold shadow-xs"
+                  >
+                    Auto-Fill Code
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           /* STEP 1: REGISTRATION DETAILS FORM */

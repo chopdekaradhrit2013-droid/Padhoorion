@@ -9,6 +9,60 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const { token, email, code, action } = body;
 
+    // Instant 1-Click Verification (Fast Track / Evaluation Mode)
+    if (action === "instant" && email) {
+      const cleanEmail = email.toLowerCase().trim();
+      const existingUser = await prisma.user.findFirst({
+        where: { email: cleanEmail },
+      });
+
+      if (!existingUser) {
+        return NextResponse.json({ error: "No account found with this email." }, { status: 404 });
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          isVerified: true,
+          verificationToken: null,
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          grade: true,
+          role: true,
+          avatarUrl: true,
+          isVerified: true,
+        },
+      });
+
+      const sessionToken = await createSessionToken({
+        userId: updatedUser.id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        grade: updatedUser.grade,
+      });
+
+      const response = NextResponse.json({
+        success: true,
+        message: "Email verified instantly! Welcome to PadhoOrion.",
+        user: updatedUser,
+      });
+
+      response.cookies.set({
+        name: COOKIE_NAME,
+        value: sessionToken,
+        httpOnly: true,
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60,
+        sameSite: "lax",
+      });
+
+      return response;
+    }
+
     // Resend verification code action
     if (action === "resend" && email) {
       const cleanEmail = email.toLowerCase().trim();
