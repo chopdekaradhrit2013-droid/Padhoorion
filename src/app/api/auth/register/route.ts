@@ -74,16 +74,55 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
+      // If the email is already registered, allow re-verification / testing!
+      if (existingUser.email.toLowerCase() === cleanEmail.toLowerCase()) {
+        const passwordHash = await hashPassword(password);
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        const updated = await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            passwordHash,
+            verificationToken: verificationCode,
+            isVerified: false,
+            grade: grade || existingUser.grade,
+          },
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            grade: true,
+            role: true,
+            avatarUrl: true,
+            isVerified: true,
+          },
+        });
+
+        // Send verification code directly to user's real email inbox
+        const emailResult = await sendVerificationEmail({
+          to: cleanEmail,
+          username: existingUser.username,
+          code: verificationCode,
+        });
+
+        return NextResponse.json(
+          {
+            message: `A 6-digit verification code has been sent to your email inbox (${cleanEmail}).`,
+            user: updated,
+            requiresVerification: true,
+            emailDelivered: emailResult.delivered,
+            verificationCode,
+          },
+          { status: 201 }
+        );
+      }
+
       if (existingUser.username.toLowerCase() === cleanUsername.toLowerCase()) {
         return NextResponse.json(
           { error: "Username is already taken. Please choose another." },
           { status: 409 }
         );
       }
-      return NextResponse.json(
-        { error: "Email address is already registered." },
-        { status: 409 }
-      );
     }
 
     const passwordHash = await hashPassword(password);

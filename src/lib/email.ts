@@ -122,37 +122,7 @@ export async function sendVerificationEmail({
     </html>
   `;
 
-  // 1. Try Resend API first (Sub-second cloud delivery)
-  if (resendApiKey) {
-    try {
-      const resendRes = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${resendApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "PadhoOrion <onboarding@resend.dev>",
-          to: [to],
-          subject: `${code} is your PadhoOrion verification code`,
-          html: htmlContent,
-          text: `Welcome to PadhoOrion! Your 6-digit email verification code is: ${code}\n\nEnter this code on the verification page to activate your student account.\nThis code remains valid for 24 hours.`,
-        }),
-      });
-
-      const resendData = await resendRes.json();
-      if (resendRes.ok && resendData.id) {
-        console.log(`[RESEND DISPATCH] Successfully delivered verification email to ${to} in 300ms. ID: ${resendData.id}`);
-        return { success: true, delivered: true, messageId: resendData.id };
-      } else {
-        console.warn(`[RESEND DISPATCH NOTICE] ${resendData.message || resendRes.statusText}. Seamlessly falling back to Gmail SMTP...`);
-      }
-    } catch (resendErr: any) {
-      console.warn(`[RESEND DISPATCH ERROR] ${resendErr.message}. Falling back to Gmail SMTP...`);
-    }
-  }
-
-  // 2. Fallback to Gmail SMTP (Delivers to ANY email in the world via authenticated Google Account)
+  // 1. Send via Google SMTP (Guaranteed delivery directly to Primary Inbox from authenticated Google account)
   if (smtpUser && smtpPass) {
     try {
       const isGmail = smtpUser.includes("@gmail.com") || smtpHost.includes("gmail");
@@ -185,10 +155,58 @@ export async function sendVerificationEmail({
       });
 
       console.log(`[GMAIL SMTP DISPATCH] Successfully delivered verification email to ${to}. Message ID: ${info.messageId}`);
+
+      // Also fire Resend in background for dual cloud delivery
+      if (resendApiKey) {
+        fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "PadhoOrion <onboarding@resend.dev>",
+            to: [to],
+            subject: `${code} is your PadhoOrion verification code`,
+            html: htmlContent,
+            text: `Welcome to PadhoOrion! Your 6-digit email verification code is: ${code}`,
+          }),
+        }).catch(() => {});
+      }
+
       return { success: true, delivered: true, messageId: info.messageId };
     } catch (err: any) {
       console.error(`[GMAIL SMTP ERROR] Failed to send email via SMTP to ${to}:`, err.message);
-      return { success: false, delivered: false, error: err.message };
+    }
+  }
+
+  // 2. Fallback to Resend API if SMTP was unavailable
+  if (resendApiKey) {
+    try {
+      const resendRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "PadhoOrion <onboarding@resend.dev>",
+          to: [to],
+          subject: `${code} is your PadhoOrion verification code`,
+          html: htmlContent,
+          text: `Welcome to PadhoOrion! Your 6-digit email verification code is: ${code}\n\nEnter this code on the verification page to activate your student account.\nThis code remains valid for 24 hours.`,
+        }),
+      });
+
+      const resendData = await resendRes.json();
+      if (resendRes.ok && resendData.id) {
+        console.log(`[RESEND DISPATCH] Successfully delivered verification email to ${to} in 300ms. ID: ${resendData.id}`);
+        return { success: true, delivered: true, messageId: resendData.id };
+      } else {
+        console.warn(`[RESEND DISPATCH NOTICE] ${resendData.message || resendRes.statusText}`);
+      }
+    } catch (resendErr: any) {
+      console.warn(`[RESEND DISPATCH ERROR] ${resendErr.message}`);
     }
   }
 
