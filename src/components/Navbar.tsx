@@ -42,6 +42,32 @@ export function Navbar() {
 
   return (
     <>
+      {user?.impersonatedBy && (
+        <div className="bg-[#c96442] text-[#faf9f5] px-4 py-2.5 text-xs font-bold flex flex-wrap items-center justify-between gap-2 sticky top-0 z-50 shadow-md border-b border-[#b05435]">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-orange-200 animate-pulse shrink-0" />
+            <span>
+              ADMIN TESTING SESSION: Currently viewing & testing as <span className="underline decoration-white underline-offset-2">{user.username}</span> [{user.grade}]
+            </span>
+          </div>
+          <button
+            onClick={async () => {
+              try {
+                const res = await fetch("/api/admin/impersonate/exit", { method: "POST" });
+                if (res.ok) {
+                  window.location.href = "/admin";
+                }
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+            className="px-3 py-1 bg-[#faf9f5] text-[#3d3929] hover:bg-white text-xs font-black rounded-lg transition-all shadow-xs flex items-center gap-1.5"
+          >
+            <span>Exit to Admin Console</span>
+            <span aria-hidden="true">&rarr;</span>
+          </button>
+        </div>
+      )}
       <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           {/* Brand & Mobile Hamburger */}

@@ -28,7 +28,10 @@ export async function getAuthUserFromRequest() {
     });
 
     if (!user || user.isBanned) return null;
-    return user;
+    return {
+      ...user,
+      impersonatedBy: payload.impersonatedBy || null,
+    };
   } catch {
     return null;
   }

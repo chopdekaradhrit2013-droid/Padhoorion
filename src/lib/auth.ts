@@ -15,6 +15,7 @@ export interface SessionPayload {
   email: string;
   role: string;
   grade: string;
+  impersonatedBy?: string;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -73,7 +74,10 @@ export async function getSessionUser() {
       return null;
     }
 
-    return user;
+    return {
+      ...user,
+      impersonatedBy: payload.impersonatedBy || null,
+    };
   } catch {
     return null;
   }

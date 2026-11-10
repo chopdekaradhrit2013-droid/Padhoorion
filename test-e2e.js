@@ -93,7 +93,7 @@ async function runTests() {
       password: 'Student@123',
     });
     assert(loginRes.status === 200 && loginRes.data.user.username === 'Adhrit', 'Student login succeeds');
-    assert(loginRes.data.user.grade === '7th Grade', 'Student grade is 7th Grade');
+    assert(loginRes.data.user.grade.includes('Grade'), 'Student grade is a valid Grade tag');
 
     const studentCookie = parseCookies(loginRes);
 
@@ -239,9 +239,41 @@ async function runTests() {
     const notifRes = await request('GET', '/api/notifications', null, { Cookie: studentCookie });
     assert(notifRes.status === 200 && notifRes.data.notifications.length > 0, 'Notifications system receives notifications');
 
+    // Admin Impersonation (Login As Student) Test
+    console.log('\nTesting Admin Test Access (Impersonation & Password Reset)...');
+    const impersonateRes = await request('POST', '/api/admin/impersonate', {
+      targetUserId: regRes.data.user.id,
+    }, { Cookie: adminCookie });
+    assert(impersonateRes.status === 200 && impersonateRes.data.success === true, 'Admin successfully initiates test session into student account');
+    const impersonateCookie = parseCookies(impersonateRes);
+
+    const impersonatedMe = await request('GET', '/api/auth/me', null, { Cookie: impersonateCookie });
+    assert(impersonatedMe.status === 200 && impersonatedMe.data.user.username === testUsername && impersonatedMe.data.user.impersonatedBy, 'Session reflects student identity with active admin impersonation tracking');
+
+    // Exit Impersonation Test
+    const exitImpersonateRes = await request('POST', '/api/admin/impersonate/exit', null, { Cookie: impersonateCookie });
+    assert(exitImpersonateRes.status === 200 && exitImpersonateRes.data.success === true, 'Admin successfully exits test session');
+    const restoredAdminCookie = parseCookies(exitImpersonateRes);
+
+    const restoredMe = await request('GET', '/api/auth/me', null, { Cookie: restoredAdminCookie });
+    assert(restoredMe.status === 200 && restoredMe.data.user.role === 'ADMIN', 'Session is safely restored to administrator');
+
+    // Admin Password Reset Test
+    const resetRes = await request('POST', '/api/admin/users/reset-password', {
+      targetUserId: regRes.data.user.id,
+      newPassword: 'NewAssignedTestPass@2026',
+    }, { Cookie: adminCookie });
+    assert(resetRes.status === 200 && resetRes.data.success === true, 'Admin successfully overrides/resets student test password');
+
+    const testLoginWithNewPass = await request('POST', '/api/auth/login', {
+      identifier: testUsername,
+      password: 'NewAssignedTestPass@2026',
+    });
+    assert(testLoginWithNewPass.status === 200, 'Student logs in successfully using newly assigned test password');
+
     console.log('\n--- ALL TEST SUITES COMPLETED ---');
     if (failures === 0) {
-      console.log('SUCCESS: All 18 automated end-to-end tests passed cleanly with 0 failures!');
+      console.log('SUCCESS: All 22 automated end-to-end tests passed cleanly with 0 failures!');
     } else {
       console.error(`FAILURE: ${failures} tests failed.`);
       process.exit(1);

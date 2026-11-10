@@ -16,6 +16,8 @@ import {
   AlertTriangle,
   Clock,
   Plus,
+  Key,
+  LogIn,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { ANNOUNCEMENT_DURATIONS } from "@/lib/constants";
@@ -49,6 +51,12 @@ export default function AdminDashboardPage() {
   const [announcementNotice, setAnnouncementNotice] = useState<string | null>(null);
 
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+
+  // Admin test access state
+  const [resetModalUser, setResetModalUser] = useState<any | null>(null);
+  const [newPasswordInput, setNewPasswordInput] = useState("TestPass@2026");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSuccessMsg, setResetSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && user.role !== "ADMIN") {
@@ -137,6 +145,68 @@ export default function AdminDashboardPage() {
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleImpersonate = async (targetUser: any) => {
+    if (
+      !confirm(
+        `Start test session as "${targetUser.username}" (${targetUser.grade})?\n\nYou will be logged into their account to test actions, and can exit back to Admin at any time via the top banner.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setFeedbackMessage(`Initiating testing session as ${targetUser.username}...`);
+      const res = await fetch("/api/admin/impersonate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId: targetUser.id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        window.location.href = "/";
+      } else {
+        alert(data.error || "Failed to start test session.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error starting test session.");
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetModalUser) return;
+    if (newPasswordInput.length < 6) {
+      alert("Password must be at least 6 characters.");
+      return;
+    }
+    setResetLoading(true);
+    setResetSuccessMsg(null);
+    try {
+      const res = await fetch("/api/admin/users/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetUserId: resetModalUser.id,
+          newPassword: newPasswordInput,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResetSuccessMsg(
+          `Password for ${resetModalUser.username} set to "${newPasswordInput}". You can copy this test password to log in directly.`
+        );
+      } else {
+        alert(data.error || "Failed to update password.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error updating password.");
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -385,7 +455,7 @@ export default function AdminDashboardPage() {
                   <th className="p-3">Role</th>
                   <th className="p-3">Uploads</th>
                   <th className="p-3">Status</th>
-                  <th className="p-3 text-right">Moderation Action</th>
+                  <th className="p-3 text-right">Administrative Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -419,18 +489,45 @@ export default function AdminDashboardPage() {
                       )}
                     </td>
                     <td className="p-3 text-right">
-                      {u.id !== user.id && (
-                        <button
-                          onClick={() => handleToggleBan(u.id, u.isBanned)}
-                          className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
-                            u.isBanned
-                              ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs"
-                              : "bg-rose-600 text-white hover:bg-rose-700 shadow-xs"
-                          }`}
-                        >
-                          {u.isBanned ? "Unban User" : "Ban User"}
-                        </button>
-                      )}
+                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                        {u.id !== user.id && (
+                          <>
+                            <button
+                              onClick={() => handleImpersonate(u)}
+                              disabled={u.isBanned}
+                              title={`Log into ${u.username}'s session for testing`}
+                              className="px-2 py-1 bg-[#faf9f5] hover:bg-stone-200 text-[#3d3929] border border-stone-300 rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              <LogIn className="w-3 h-3 text-[#c96442]" />
+                              <span>Login As</span>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setResetModalUser(u);
+                                setNewPasswordInput("TestPass@2026");
+                                setResetSuccessMsg(null);
+                              }}
+                              title="Set or reset account password for testing"
+                              className="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
+                            >
+                              <Key className="w-3 h-3 text-amber-700" />
+                              <span>Set Password</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleToggleBan(u.id, u.isBanned)}
+                              className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all shadow-2xs ${
+                                u.isBanned
+                                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                                  : "bg-rose-600 text-white hover:bg-rose-700"
+                              }`}
+                            >
+                              {u.isBanned ? "Unban" : "Ban"}
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -688,6 +785,98 @@ export default function AdminDashboardPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Reset Modal for Admin Test Access */}
+      {resetModalUser && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#faf9f5] border border-[#e9e6dc] rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-scale-up">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-amber-100 text-amber-800 rounded-xl">
+                  <Key className="w-5 h-5 text-amber-700" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-[#3d3929]">
+                    Set Test Password
+                  </h3>
+                  <p className="text-xs text-[#706d63]">
+                    Assign credentials for {resetModalUser.username} [{resetModalUser.grade}]
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setResetModalUser(null)}
+                className="text-stone-400 hover:text-stone-700 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {resetSuccessMsg ? (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl space-y-2 text-xs">
+                <p className="font-bold">{resetSuccessMsg}</p>
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={() => setResetModalUser(null)}
+                    className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 leading-relaxed">
+                  Enter a new password for this user. You can use this exact password to log into their account at <strong>/login</strong> for testing.
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#3d3929] mb-1">
+                    New Password
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      minLength={6}
+                      value={newPasswordInput}
+                      onChange={(e) => setNewPasswordInput(e.target.value)}
+                      placeholder="e.g. TestPass@2026"
+                      className="flex-1 px-3 py-2 bg-white border border-[#dad9d4] rounded-xl text-xs font-mono text-[#3d3929] focus:outline-none focus:ring-2 focus:ring-[#c96442]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNewPasswordInput(`TestPass@${Math.floor(1000 + Math.random() * 9000)}`)
+                      }
+                      className="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold"
+                    >
+                      Generate
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-200">
+                  <button
+                    type="button"
+                    onClick={() => setResetModalUser(null)}
+                    className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resetLoading}
+                    className="px-4 py-2 bg-[#c96442] hover:bg-[#b05435] text-white rounded-xl text-xs font-bold shadow-xs disabled:opacity-50"
+                  >
+                    {resetLoading ? "Updating..." : "Update Password"}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

@@ -13,6 +13,7 @@ export interface User {
   bio?: string | null;
   isVerified: boolean;
   unreadNotificationsCount?: number;
+  impersonatedBy?: string | null;
 }
 
 interface AuthContextType {
