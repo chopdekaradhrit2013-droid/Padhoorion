@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, User, Mail, GraduationCap, Image, AlertCircle, CheckCircle, ShieldAlert } from "lucide-react";
+import { Eye, EyeOff, Lock, User, Mail, GraduationCap, Image, AlertCircle, CheckCircle } from "lucide-react";
 import { GRADES, GradeType } from "@/lib/constants";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -161,14 +161,6 @@ export default function RegisterPage() {
             <p className="text-[11px] text-indigo-600 font-medium mt-1">
               * Note: You can freely view, comment, and upload to all grades regardless of this selection.
             </p>
-          </div>
-
-          {/* Password Security Warning */}
-          <div className="p-3 bg-amber-50/90 border border-amber-300 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 shadow-2xs">
-            <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-            <div className="leading-snug">
-              <strong className="font-bold">Security Notice:</strong> Please do not use your common password as it gets stored. Please use a new, unique password.
-            </div>
           </div>
 
           {/* Passwords */}

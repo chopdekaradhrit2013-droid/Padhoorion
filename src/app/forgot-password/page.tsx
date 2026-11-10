@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Mail, ArrowLeft, CheckCircle, AlertCircle, Key, ShieldAlert } from "lucide-react";
+import { Mail, ArrowLeft, CheckCircle, AlertCircle, Key } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -124,13 +124,6 @@ export default function ForgotPasswordPage() {
           <form onSubmit={handleResetPassword} className="space-y-4">
             <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-xs text-indigo-900 font-medium">
               <span className="font-bold">Reset Token Verified.</span> Please enter your new password below.
-            </div>
-
-            <div className="p-3 bg-amber-50/90 border border-amber-300 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 shadow-2xs">
-              <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-              <div className="leading-snug">
-                <strong className="font-bold">Security Notice:</strong> Please do not use your common password as it gets stored. Please use a new, unique password.
-              </div>
             </div>
 
             <div>
