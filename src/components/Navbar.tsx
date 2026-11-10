@@ -96,7 +96,7 @@ export function Navbar() {
       <header
         className={`sticky top-0 z-40 w-full backdrop-blur-md transition-colors ${
           isLandingPage
-            ? "bg-[#181614]/85 border-b border-white/10 text-white shadow-xl shadow-black/20"
+            ? "bg-[#faf9f5]/95 border-b border-[#e8e4dc] text-[#1c1917] shadow-xs"
             : "bg-white/95 border-b border-slate-200/90 shadow-xs"
         }`}
       >
@@ -108,7 +108,7 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className={`md:hidden p-2 rounded-lg transition-colors ${
                   isLandingPage
-                    ? "text-white/80 hover:bg-white/10"
+                    ? "text-[#1c1917] hover:bg-[#ebdccc]/50"
                     : "text-slate-700 hover:bg-slate-100"
                 }`}
                 aria-label="Toggle navigation menu"
@@ -121,22 +121,20 @@ export function Navbar() {
               <img
                 src="/logo.png"
                 alt="PadhoOrion Logo"
-                className="w-10 h-10 rounded-xl object-contain shadow-xs border border-white/10"
+                className="w-10 h-10 rounded-xl object-contain shadow-xs border border-[#ebdccc]"
               />
               <div>
                 <span
                   className={`font-extrabold text-xl tracking-tight transition-colors ${
                     isLandingPage
-                      ? "text-white group-hover:text-[#ea8d6c]"
+                      ? "text-[#1c1917] group-hover:text-[#c96442]"
                       : "text-slate-900 group-hover:text-[#c96442]"
                   }`}
                 >
                   PadhoOrion
                 </span>
                 <span
-                  className={`block text-[10px] uppercase font-bold tracking-widest -mt-1 font-sans ${
-                    isLandingPage ? "text-[#ea8d6c]" : "text-[#c96442]"
-                  }`}
+                  className="block text-[10px] uppercase font-bold tracking-widest -mt-1 font-sans text-[#c96442]"
                 >
                   School Community
                 </span>
@@ -298,7 +296,7 @@ export function Navbar() {
                 <Link
                   href="/login"
                   className={`px-3.5 py-2 text-xs sm:text-sm font-semibold transition-colors ${
-                    isLandingPage ? "text-white/80 hover:text-white" : "text-slate-700 hover:text-[#c96442]"
+                    isLandingPage ? "text-[#57534e] hover:text-[#c96442]" : "text-slate-700 hover:text-[#c96442]"
                   }`}
                 >
                   Log In

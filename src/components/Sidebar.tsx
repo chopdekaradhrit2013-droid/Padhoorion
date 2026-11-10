@@ -58,8 +58,8 @@ export function Sidebar({ className = "" }: { className?: string }) {
     });
   }
 
-  // Hide sidebar completely when user is logged out (e.g. landing page)
-  if (!user) return null;
+  // Hide sidebar completely when user is logged out or viewing standalone landing page
+  if (!user || pathname === "/landing") return null;
 
   return (
     <aside className={`w-64 bg-[#f5f4ee] border-r border-[#dad9d4] flex flex-col justify-between p-4 shadow-xs ${className}`}>

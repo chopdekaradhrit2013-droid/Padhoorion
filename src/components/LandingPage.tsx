@@ -92,38 +92,38 @@ export function LandingPage() {
 
   return (
     <KineticGrid globalColor="terracotta" className="-m-4 sm:-m-6 lg:-m-8">
-      <div className="relative text-[#faf9f5] px-4 sm:px-6 lg:px-8 py-10 sm:py-16 max-w-6xl mx-auto space-y-24 sm:space-y-32">
+      <div className="relative text-[#292524] px-4 sm:px-6 lg:px-8 py-10 sm:py-16 max-w-6xl mx-auto space-y-20 sm:space-y-28">
         {/* HERO SECTION */}
-        <section className="text-center space-y-8 pt-4 sm:pt-10">
+        <section className="text-center space-y-8 pt-4 sm:pt-8">
           {/* Interactive Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.06] border border-white/15 text-xs sm:text-sm font-medium text-[#f3b5a1] backdrop-blur-md shadow-lg shadow-black/20">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#fbeee8] border border-[#f5d0c2] text-xs sm:text-sm font-semibold text-[#c96442] shadow-xs">
             <span className="w-2 h-2 rounded-full bg-[#c96442] animate-ping" />
-            <span className="font-semibold text-white">Interactive Canvas</span>
-            <span className="text-white/40">•</span>
-            <span className="hidden sm:inline text-white/80">Move cursor to warp grid &bull; Click anywhere to ripple</span>
-            <span className="sm:hidden text-white/80">Tap to ripple grid</span>
+            <span className="font-bold text-[#c96442]">Interactive Canvas</span>
+            <span className="text-[#c96442]/40">•</span>
+            <span className="hidden sm:inline text-[#78716c]">Move cursor to warp grid &bull; Click anywhere to ripple</span>
+            <span className="sm:hidden text-[#78716c]">Tap to ripple grid</span>
           </div>
 
           {/* Main Headline */}
           <div className="space-y-4 max-w-4xl mx-auto">
             <div className="flex justify-center mb-4">
-              <div className="relative p-2.5 rounded-3xl bg-white/[0.08] backdrop-blur-md border border-white/15 shadow-2xl shadow-[#c96442]/20">
+              <div className="relative p-2.5 rounded-3xl bg-white shadow-xl border border-[#ebdccc] shadow-[#c96442]/10">
                 <img
                   src="/logo.png"
                   alt="PadhoOrion Logo"
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-contain drop-shadow-md"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-contain drop-shadow-sm"
                 />
               </div>
             </div>
 
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] text-white">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] text-[#1c1917]">
               Real Student Notes. <br />
-              <span className="bg-gradient-to-r from-[#c96442] via-[#ea8d6c] to-[#c96442] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#c96442] via-[#e86b3a] to-[#d95f2d] bg-clip-text text-transparent">
                 Zero AI Slop.
               </span>
             </h1>
 
-            <p className="text-base sm:text-xl text-[#dfdbcf] max-w-2xl mx-auto font-sans leading-relaxed pt-2">
+            <p className="text-base sm:text-xl text-[#57534e] max-w-2xl mx-auto font-sans leading-relaxed pt-2">
               PadhoOrion is the student-only notes exchange. Direct scanned copies, teacher-assigned worksheets, formula sheets, and solved revision papers from your own classmates across 6th to 10th grades.
             </p>
           </div>
@@ -132,7 +132,7 @@ export function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto pt-2">
             <Link
               href="/register"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#c96442] hover:bg-[#a84f32] text-white font-extrabold text-sm sm:text-base shadow-xl shadow-[#c96442]/30 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-[#c96442]/25 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
             >
               <span>Join PadhoOrion Free</span>
               <ArrowRight className="w-4 h-4" />
@@ -140,25 +140,25 @@ export function LandingPage() {
 
             <Link
               href="/login"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-white font-bold text-sm sm:text-base border border-white/20 backdrop-blur-md transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white hover:bg-[#faf9f5] text-[#292524] font-bold text-sm sm:text-base border border-[#e2ded5] shadow-xs transition-all flex items-center justify-center gap-2"
             >
-              <Lock className="w-4 h-4 text-[#ea8d6c]" />
+              <Lock className="w-4 h-4 text-[#c96442]" />
               <span>Student Sign In</span>
             </Link>
           </div>
 
           {/* Value Props Strip */}
-          <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs sm:text-sm text-white/70 font-medium">
+          <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs sm:text-sm text-[#78716c] font-medium">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-[#ea8d6c]" />
+              <CheckCircle2 className="w-4 h-4 text-[#c96442]" />
               <span>100% Free Student Platform</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-[#ea8d6c]" />
+              <CheckCircle2 className="w-4 h-4 text-[#c96442]" />
               <span>No Paywalls or Hidden Fees</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-[#ea8d6c]" />
+              <CheckCircle2 className="w-4 h-4 text-[#c96442]" />
               <span>Grades 6th through 10th</span>
             </div>
           </div>
@@ -167,14 +167,14 @@ export function LandingPage() {
         {/* GRADE HUBS (6th to 10th) */}
         <section className="space-y-8">
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#c96442]/20 border border-[#c96442]/40 text-[#f3b5a1] text-xs font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fbeee8] border border-[#f5d0c2] text-[#c96442] text-xs font-bold uppercase tracking-wider">
               <GraduationCap className="w-3.5 h-3.5" />
               <span>Curriculum Segments</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1c1917]">
               Explore Academic Grades
             </h2>
-            <p className="text-sm sm:text-base text-white/60">
+            <p className="text-sm sm:text-base text-[#78716c]">
               Browse notes tailored specifically to your syllabus. Switch freely between grades at any time.
             </p>
           </div>
@@ -183,26 +183,26 @@ export function LandingPage() {
             {gradeDetails.map((item) => (
               <div
                 key={item.grade}
-                className="group relative p-6 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/10 hover:border-[#c96442]/60 hover:bg-white/[0.07] transition-all duration-300 flex flex-col justify-between space-y-4 shadow-xl"
+                className="group relative p-6 rounded-2xl bg-white/90 backdrop-blur-md border border-[#e8e4dc] hover:border-[#c96442] hover:shadow-xl hover:bg-white transition-all duration-300 flex flex-col justify-between space-y-4 shadow-sm"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-2xl">{item.icon}</span>
-                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#c96442]/25 text-[#f3b5a1] border border-[#c96442]/40 font-mono">
+                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#fbeee8] text-[#c96442] border border-[#f5d0c2] font-mono">
                       {item.grade}
                     </span>
                   </div>
 
-                  <h3 className="font-extrabold text-lg text-white group-hover:text-[#ea8d6c] transition-colors">
+                  <h3 className="font-extrabold text-lg text-[#1c1917] group-hover:text-[#c96442] transition-colors">
                     {item.grade}
                   </h3>
-                  <p className="text-xs text-white/70 font-sans">
+                  <p className="text-xs text-[#78716c] font-sans">
                     {item.focus}
                   </p>
 
-                  <div className="pt-2 border-t border-white/10 space-y-1.5">
+                  <div className="pt-2 border-t border-[#f0ece4] space-y-1.5">
                     {item.subjects.map((sub, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-white/80">
+                      <div key={i} className="flex items-center gap-2 text-xs text-[#57534e]">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#c96442]" />
                         <span className="truncate">{sub}</span>
                       </div>
@@ -212,7 +212,7 @@ export function LandingPage() {
 
                 <Link
                   href="/register"
-                  className="mt-3 inline-flex items-center justify-between w-full py-2 px-3 rounded-xl bg-white/[0.05] hover:bg-[#c96442] text-xs font-bold text-white transition-colors border border-white/10 group-hover:border-[#c96442]"
+                  className="mt-3 inline-flex items-center justify-between w-full py-2 px-3.5 rounded-xl bg-[#faf8f5] hover:bg-[#c96442] hover:text-white text-xs font-bold text-[#c96442] transition-all border border-[#ebdccc] group-hover:border-[#c96442] shadow-2xs"
                 >
                   <span>Explore {item.grade} Notes</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -221,22 +221,22 @@ export function LandingPage() {
             ))}
 
             {/* Quick Access Card */}
-            <div className="p-6 rounded-2xl bg-gradient-to-br from-[#c96442]/30 via-black/40 to-[#c96442]/10 backdrop-blur-xl border border-[#c96442]/50 text-white flex flex-col justify-between space-y-4 shadow-xl">
+            <div className="p-6 rounded-2xl bg-gradient-to-br from-[#fbeee8] via-white to-[#fbf2ed] border border-[#f0c8ba] text-[#292524] flex flex-col justify-between space-y-4 shadow-sm">
               <div className="space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-[#c96442] text-white flex items-center justify-center font-bold text-lg shadow-md">
+                <div className="w-10 h-10 rounded-xl bg-[#c96442] text-white flex items-center justify-center font-bold text-lg shadow-md shadow-[#c96442]/30">
                   ★
                 </div>
-                <h3 className="font-black text-xl text-white">
+                <h3 className="font-black text-xl text-[#1c1917]">
                   Cross-Grade Exploration
                 </h3>
-                <p className="text-xs text-white/80 leading-relaxed">
+                <p className="text-xs text-[#57534e] leading-relaxed">
                   Your registered grade never restricts you. 8th graders can preview 9th grade topics in advance, and 10th graders can revise 9th grade foundations before board exams.
                 </p>
               </div>
 
               <Link
                 href="/register"
-                className="w-full py-2.5 px-4 rounded-xl bg-[#c96442] hover:bg-[#a84f32] text-white font-bold text-xs text-center transition-all shadow-md"
+                className="w-full py-2.5 px-4 rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white font-bold text-xs text-center transition-all shadow-md shadow-[#c96442]/20"
               >
                 Create Account to Access All
               </Link>
@@ -247,14 +247,14 @@ export function LandingPage() {
         {/* 5 RESOURCE FORMATS */}
         <section className="space-y-8">
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/15 text-white/80 text-xs font-bold uppercase tracking-wider">
-              <Layers className="w-3.5 h-3.5 text-[#ea8d6c]" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fbeee8] border border-[#f5d0c2] text-[#c96442] text-xs font-bold uppercase tracking-wider">
+              <Layers className="w-3.5 h-3.5 text-[#c96442]" />
               <span>Structured Study Formats</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1c1917]">
               Every Format You Need to Ace Exams
             </h2>
-            <p className="text-sm sm:text-base text-white/60">
+            <p className="text-sm sm:text-base text-[#78716c]">
               No disorganized camera rolls. Everything is tagged by grade, subject, and resource format.
             </p>
           </div>
@@ -263,48 +263,48 @@ export function LandingPage() {
             {noteCategories.map((cat) => (
               <div
                 key={cat.num}
-                className="p-6 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/10 hover:border-white/25 transition-all space-y-3 shadow-lg flex flex-col justify-between"
+                className="p-6 rounded-2xl bg-white/90 backdrop-blur-md border border-[#e8e4dc] hover:border-[#c96442]/60 hover:shadow-md transition-all space-y-3 shadow-sm flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-sm font-black text-[#ea8d6c]">
+                    <span className="font-mono text-sm font-black text-[#c96442]">
                       {cat.num}
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/[0.08] text-white/80 border border-white/10">
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#fbeee8] text-[#c96442] border border-[#f5d0c2]">
                       {cat.badge}
                     </span>
                   </div>
 
-                  <h3 className="font-extrabold text-base text-white">
+                  <h3 className="font-extrabold text-base text-[#1c1917]">
                     {cat.title}
                   </h3>
 
-                  <p className="text-xs text-white/70 leading-relaxed font-sans">
+                  <p className="text-xs text-[#57534e] leading-relaxed font-sans">
                     {cat.desc}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-white/50">
+                <div className="pt-3 border-t border-[#f0ece4] flex items-center justify-between text-[11px] text-[#78716c]">
                   <span>Organized by Chapter</span>
-                  <span className="text-[#ea8d6c] font-semibold">PDF Downloads</span>
+                  <span className="text-[#c96442] font-semibold">PDF Downloads</span>
                 </div>
               </div>
             ))}
 
             {/* Quick Upload Teaser */}
-            <div className="p-6 rounded-2xl bg-[#c96442]/20 backdrop-blur-xl border border-[#c96442]/40 text-white flex flex-col justify-between space-y-3 shadow-lg">
+            <div className="p-6 rounded-2xl bg-gradient-to-br from-[#fbeee8] to-white border border-[#f0c8ba] text-[#292524] flex flex-col justify-between space-y-3 shadow-sm">
               <div className="space-y-2">
-                <div className="p-2 rounded-lg bg-[#c96442] text-white w-fit">
+                <div className="p-2 rounded-lg bg-[#c96442] text-white w-fit shadow-xs">
                   <FileText className="w-4 h-4" />
                 </div>
-                <h3 className="font-extrabold text-base text-white">Have Good Notes?</h3>
-                <p className="text-xs text-white/80 leading-relaxed">
+                <h3 className="font-extrabold text-base text-[#1c1917]">Have Good Notes?</h3>
+                <p className="text-xs text-[#57534e] leading-relaxed">
                   Upload your handwritten study copies or formula sheets to help your classmates and earn community recognition.
                 </p>
               </div>
               <Link
                 href="/register"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#f3b5a1] hover:text-white transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c96442] hover:text-[#a84f32] transition-colors"
               >
                 <span>Upload your first note</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -314,34 +314,34 @@ export function LandingPage() {
         </section>
 
         {/* STATS & COMMUNITY TRUST */}
-        <section className="p-8 sm:p-12 rounded-3xl bg-white/[0.04] backdrop-blur-2xl border border-white/10 shadow-2xl">
+        <section className="p-8 sm:p-12 rounded-3xl bg-white/95 backdrop-blur-md border border-[#e8e4dc] shadow-sm">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             <div className="space-y-1">
-              <div className="text-3xl sm:text-5xl font-black text-white font-mono">5</div>
-              <div className="text-xs sm:text-sm text-white/60 font-medium">Academic Grades</div>
+              <div className="text-3xl sm:text-5xl font-black text-[#1c1917] font-mono">5</div>
+              <div className="text-xs sm:text-sm text-[#78716c] font-medium">Academic Grades</div>
             </div>
             <div className="space-y-1">
-              <div className="text-3xl sm:text-5xl font-black text-[#ea8d6c] font-mono">100%</div>
-              <div className="text-xs sm:text-sm text-white/60 font-medium">Student Verified</div>
+              <div className="text-3xl sm:text-5xl font-black text-[#c96442] font-mono">100%</div>
+              <div className="text-xs sm:text-sm text-[#78716c] font-medium">Student Verified</div>
             </div>
             <div className="space-y-1">
-              <div className="text-3xl sm:text-5xl font-black text-white font-mono">5</div>
-              <div className="text-xs sm:text-sm text-white/60 font-medium">Study Formats</div>
+              <div className="text-3xl sm:text-5xl font-black text-[#1c1917] font-mono">5</div>
+              <div className="text-xs sm:text-sm text-[#78716c] font-medium">Study Formats</div>
             </div>
             <div className="space-y-1">
-              <div className="text-3xl sm:text-5xl font-black text-[#ea8d6c] font-mono">24/7</div>
-              <div className="text-xs sm:text-sm text-white/60 font-medium">Peer Collaboration</div>
+              <div className="text-3xl sm:text-5xl font-black text-[#c96442] font-mono">24/7</div>
+              <div className="text-xs sm:text-sm text-[#78716c] font-medium">Peer Collaboration</div>
             </div>
           </div>
         </section>
 
         {/* BOTTOM CALL TO ACTION */}
-        <section className="text-center p-8 sm:p-14 rounded-3xl bg-gradient-to-b from-white/[0.08] to-white/[0.03] backdrop-blur-xl border border-white/15 shadow-2xl space-y-6">
+        <section className="text-center p-8 sm:p-14 rounded-3xl bg-gradient-to-br from-[#ffffff] via-[#fdf8f5] to-[#faeee7] border border-[#f3dcd2] shadow-xl space-y-6">
           <div className="max-w-2xl mx-auto space-y-3">
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#1c1917]">
               Ready to Ace Your Next School Exam?
             </h2>
-            <p className="text-sm sm:text-base text-white/70">
+            <p className="text-sm sm:text-base text-[#57534e]">
               Sign up in 30 seconds. Download notes, request worksheets, and study alongside your classmates.
             </p>
           </div>
@@ -349,7 +349,7 @@ export function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <Link
               href="/register"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#c96442] hover:bg-[#a84f32] text-white font-extrabold text-sm sm:text-base shadow-xl shadow-[#c96442]/30 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-[#c96442]/30 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
             >
               <span>Create Free Student Account</span>
               <ArrowRight className="w-4 h-4" />
@@ -357,7 +357,7 @@ export function LandingPage() {
 
             <Link
               href="/login"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-white font-bold text-sm sm:text-base border border-white/20 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white hover:bg-[#faf9f5] text-[#292524] font-bold text-sm sm:text-base border border-[#e2ded5] shadow-xs transition-all flex items-center justify-center gap-2"
             >
               <span>Log In to PadhoOrion</span>
             </Link>
@@ -365,10 +365,10 @@ export function LandingPage() {
         </section>
 
         {/* FOOTER */}
-        <footer className="pt-6 border-t border-white/10 text-center text-xs text-white/40 space-y-2">
+        <footer className="pt-6 border-t border-[#e8e4dc] text-center text-xs text-[#a8a29e] space-y-2">
           <div className="flex items-center justify-center gap-2">
             <img src="/logo.png" alt="PadhoOrion Logo" className="w-5 h-5 rounded object-contain opacity-80" />
-            <span className="font-bold text-white/70">PadhoOrion Community</span>
+            <span className="font-bold text-[#57534e]">PadhoOrion Community</span>
             <span>&bull;</span>
             <span>Made for Students</span>
           </div>

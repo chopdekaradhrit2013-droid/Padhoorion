@@ -26,9 +26,10 @@ const MAX_WARP = 24;
 const DOT_SPACING = 28;
 const LERP_SPEED = 0.08;
 
-const LINE_BASE = { r: 250, g: 249, b: 245, a: 0.12 };
+// Clean warm-white theme baseline lines
+const LINE_BASE = { r: 215, g: 210, b: 200, a: 0.55 };
 const NODE_BASE_RADIUS = 1.8;
-const NODE_ACTIVE_RADIUS = 3.4;
+const NODE_ACTIVE_RADIUS = 3.6;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -152,28 +153,34 @@ export default function KineticGrid({
       const mouse = mouseRef.current;
       const ripples = ripplesRef.current;
 
-      // UI Brand Colors: Terracotta (#c96442 -> rgb 201, 100, 66), warm dark base
+      // Clean White & Vibrant Orange Theme
       const theme = {
         default: {
-          bg: "#181614",
+          bg: "#ffffff",
+          dot: "rgba(201, 100, 66, 0.08)",
           lineActive: { r: 201, g: 100, b: 66, a: 0.95 },
-          nodeActive: { r: 228, g: 115, b: 78, a: 1.0 },
+          nodeBase: { r: 215, g: 210, b: 200, a: 0.6 },
+          nodeActive: { r: 201, g: 100, b: 66, a: 1.0 },
           glow: "201,100,66",
-          ripple: "228,125,85",
+          ripple: "201,100,66",
         },
         terracotta: {
-          bg: "#181614",
+          bg: "#faf9f5",
+          dot: "rgba(201, 100, 66, 0.08)",
           lineActive: { r: 201, g: 100, b: 66, a: 0.95 },
-          nodeActive: { r: 228, g: 115, b: 78, a: 1.0 },
+          nodeBase: { r: 215, g: 210, b: 200, a: 0.6 },
+          nodeActive: { r: 201, g: 100, b: 66, a: 1.0 },
           glow: "201,100,66",
-          ripple: "228,125,85",
+          ripple: "201,100,66",
         },
         monochrome: {
-          bg: "#000000",
-          lineActive: { r: 255, g: 255, b: 255, a: 0.9 },
-          nodeActive: { r: 255, g: 255, b: 255, a: 1.0 },
-          glow: "255,255,255",
-          ripple: "255,255,255",
+          bg: "#ffffff",
+          dot: "rgba(0, 0, 0, 0.05)",
+          lineActive: { r: 40, g: 40, b: 40, a: 0.9 },
+          nodeBase: { r: 210, g: 210, b: 210, a: 0.6 },
+          nodeActive: { r: 20, g: 20, b: 20, a: 1.0 },
+          glow: "40,40,40",
+          ripple: "40,40,40",
         },
       }[globalColor ?? "default"];
 
@@ -184,11 +191,11 @@ export default function KineticGrid({
       ctx.fillRect(0, 0, W, H);
 
       // Static background dot texture
-      ctx.fillStyle = "rgba(250,249,245,0.06)";
+      ctx.fillStyle = theme.dot;
       for (let x = DOT_SPACING / 2; x < W; x += DOT_SPACING) {
         for (let y = DOT_SPACING / 2; y < H; y += DOT_SPACING) {
           ctx.beginPath();
-          ctx.arc(x, y, 0.7, 0, Math.PI * 2);
+          ctx.arc(x, y, 0.8, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -294,7 +301,7 @@ export default function KineticGrid({
           ctx.beginPath();
           ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
           ctx.fillStyle = lerpColor(
-            { r: 250, g: 249, b: 245, a: 0.22 },
+            theme.nodeBase,
             theme.nodeActive,
             t,
           );
@@ -308,8 +315,8 @@ export default function KineticGrid({
         const safeRadius = Math.max(0, r.radius);
         ctx.beginPath();
         ctx.arc(r.x, r.y, safeRadius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(${theme.ripple},${(r.opacity * 0.32).toFixed(3)})`;
-        ctx.lineWidth = 1.6;
+        ctx.strokeStyle = `rgba(${theme.ripple},${(r.opacity * 0.45).toFixed(3)})`;
+        ctx.lineWidth = 1.8;
         ctx.stroke();
       }
     },
@@ -387,7 +394,7 @@ export default function KineticGrid({
     <div
       className={cn(
         "relative w-full min-h-screen overflow-hidden",
-        globalColor === "monochrome" ? "bg-[#000000]" : "bg-[#181614]",
+        globalColor === "monochrome" ? "bg-white" : "bg-[#faf9f5]",
         className,
       )}
     >
