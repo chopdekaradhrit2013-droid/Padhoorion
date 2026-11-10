@@ -1,4 +1,6 @@
 import nodemailer from "nodemailer";
+import fs from "fs";
+import path from "path";
 
 interface SendVerificationEmailOptions {
   to: string;
@@ -6,16 +8,50 @@ interface SendVerificationEmailOptions {
   code: string;
 }
 
+function getEmailCredentials() {
+  let user = (process.env.GMAIL_USER || process.env.SMTP_USER || "").trim();
+  let pass = (process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || "").trim().replace(/\s+/g, "");
+
+  // If credentials are empty in process.env, read directly from .env file on disk
+  if (!user || !pass) {
+    try {
+      const envPath = path.resolve(process.cwd(), ".env");
+      if (fs.existsSync(envPath)) {
+        const envContent = fs.readFileSync(envPath, "utf-8");
+        envContent.split("\n").forEach((line) => {
+          const match = line.match(/^([^#=]+)=(.*)$/);
+          if (match) {
+            const key = match[1].trim();
+            const val = match[2].trim().replace(/^["\x27](.*)["\x27]$/, "$1");
+            if ((key === "GMAIL_USER" || key === "SMTP_USER") && !user) {
+              user = val.trim();
+              process.env[key] = user;
+            }
+            if ((key === "GMAIL_APP_PASSWORD" || key === "SMTP_PASS") && !pass) {
+              pass = val.trim().replace(/\s+/g, "");
+              process.env[key] = pass;
+            }
+          }
+        });
+      }
+    } catch (e) {
+      console.error("[EMAIL CONFIG READ ERROR]:", e);
+    }
+  }
+
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = Number(process.env.SMTP_PORT) || 465;
+  const from = process.env.SMTP_FROM || `PadhoOrion Community <${user || "noreply@padhoorion.com"}>`;
+
+  return { user, pass, host, port, from };
+}
+
 export async function sendVerificationEmail({
   to,
   username,
   code,
 }: SendVerificationEmailOptions): Promise<{ success: boolean; delivered: boolean; error?: string; messageId?: string }> {
-  const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER || "";
-  const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "";
-  const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
-  const smtpPort = Number(process.env.SMTP_PORT) || 465;
-  const smtpFrom = process.env.SMTP_FROM || `PadhoOrion Community <${smtpUser || "noreply@padhoorion.com"}>`;
+  const { user: smtpUser, pass: smtpPass, host: smtpHost, port: smtpPort, from: smtpFrom } = getEmailCredentials();
 
   // Email HTML Template
   const htmlContent = `
@@ -108,17 +144,11 @@ export async function sendVerificationEmail({
       return { success: true, delivered: true, messageId: info.messageId };
     } catch (err: any) {
       console.error(`[EMAIL DISPATCH ERROR] Failed to send email via SMTP to ${to}:`, err.message);
-      console.log(`[EMAIL DISPATCH FALLBACK] Code for ${to}: ${code}`);
       return { success: false, delivered: false, error: err.message };
     }
   }
 
-  // If SMTP credentials are not configured yet, log to console for instant visibility
-  console.log(`----------------------------------------------------------------`);
-  console.log(`[PADHO-ORION EMAIL DISPATCH] 📬 VERIFICATION CODE FOR ${to}:`);
-  console.log(`CODE: ${code} (recipient: ${username} <${to}>)`);
-  console.log(`To enable live Gmail delivery, add GMAIL_USER and GMAIL_APP_PASSWORD to .env`);
-  console.log(`----------------------------------------------------------------`);
-
+  // If SMTP credentials are not configured yet
+  console.log(`[PADHO-ORION EMAIL DISPATCH WARNING] No Gmail App Password found for ${to}`);
   return { success: false, delivered: false, error: "SMTP credentials not configured" };
 }
