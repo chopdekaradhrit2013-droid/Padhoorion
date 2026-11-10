@@ -65,39 +65,6 @@ function VerifyContent() {
     }
   };
 
-  const handleInstantVerify = async () => {
-    if (!emailInput.trim()) {
-      setMessage("Please enter your account email.");
-      setStatus("error");
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await fetch("/api/auth/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "instant",
-          email: emailInput.trim(),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Instant verification failed");
-      setStatus("success");
-      setMessage(data.message || "Email verified instantly!");
-      await refreshUser();
-      setTimeout(() => {
-        router.push("/");
-        router.refresh();
-      }, 500);
-    } catch (err: any) {
-      setStatus("error");
-      setMessage(err.message || "Verification failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleResend = async () => {
     if (!emailInput.trim()) {
       setMessage("Please enter your account email to resend code.");
@@ -215,18 +182,6 @@ function VerifyContent() {
               <Link href="/login" className="text-slate-500 hover:text-slate-700 font-medium">
                 Back to Login
               </Link>
-            </div>
-
-            {/* Fast Track Instant Verify */}
-            <div className="pt-3 border-t border-slate-200">
-              <button
-                type="button"
-                onClick={handleInstantVerify}
-                disabled={loading || !emailInput.trim()}
-                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
-              >
-                <span>🚀 Instant 1-Click Verify (Fast Track / Evaluation)</span>
-              </button>
             </div>
           </div>
         )}
