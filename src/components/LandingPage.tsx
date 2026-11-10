@@ -9,332 +9,372 @@ import {
   ShieldCheck,
   Layers,
   FileText,
-  MessageSquare,
   ArrowRight,
   CheckCircle2,
   Lock,
   Download,
-  Heart,
   Users,
   Compass,
   Star,
+  Zap,
+  Flame,
+  Search,
 } from "lucide-react";
+import KineticGrid from "@/components/ui/kinetic-grid";
 import { GRADES, CATEGORIES } from "@/lib/constants";
 
 export function LandingPage() {
+  const gradeDetails = [
+    {
+      grade: "6th Grade",
+      focus: "Foundations & Concept Mastery",
+      subjects: ["Fractions & Number Systems", "Basic Sciences & Habitats", "Civics & History", "Grammar & Composition"],
+      icon: "🌱",
+    },
+    {
+      grade: "7th Grade",
+      focus: "Intermediate Skills & Drills",
+      subjects: ["Pre-Algebra & Integers", "Heat & Motion Labs", "Medieval Civilizations", "Comprehension & Creative Writing"],
+      icon: "📐",
+    },
+    {
+      grade: "8th Grade",
+      focus: "Advanced Middle School Science & Math",
+      subjects: ["Algebraic Identities", "Force & Pressure", "Indian Constitution", "Python & Digital Literacy"],
+      icon: "⚡",
+    },
+    {
+      grade: "9th Grade",
+      focus: "Secondary School & Early Board Prep",
+      subjects: ["Coordinate Geometry & Polynomials", "Laws of Motion & Gravitation", "Atoms & Molecules", "Economics & Democracy"],
+      icon: "🔬",
+    },
+    {
+      grade: "10th Grade",
+      focus: "Board Examination Revision & Mock Banks",
+      subjects: ["Trigonometry & Quadratic Equations", "Chemical Reactions & Electricity", "Nationalism & Global Economy", "Previous Year Question Banks"],
+      icon: "🎯",
+    },
+  ];
+
+  const noteCategories = [
+    {
+      num: "01",
+      title: "Handwritten Lecture Notes",
+      desc: "Clean, high-res scans of classroom chalkboards and notebook summaries written by classmates who actually paid attention.",
+      badge: "Real Class Notes",
+    },
+    {
+      num: "02",
+      title: "Formula & Concept Sheets",
+      desc: "Single-page condensed cheatsheets for physics derivations, math formulas, and chemistry equations right before exams.",
+      badge: "Last-Minute Prep",
+    },
+    {
+      num: "03",
+      title: "Solved Question Banks",
+      desc: "Exemplar problems, chapter-end textbook answers, and past paper solutions broken down step-by-step.",
+      badge: "100% Solved",
+    },
+    {
+      num: "04",
+      title: "Homework Worksheets",
+      desc: "Teacher-assigned drill sheets, diagrams, and revision exercises with peer verification.",
+      badge: "Practice Drills",
+    },
+    {
+      num: "05",
+      title: "Exam-Eve Revision Summaries",
+      desc: "10-minute high-yield crash digests designed to review key concepts and definitions the night before a test.",
+      badge: "High Yield",
+    },
+  ];
+
   return (
-    <div className="space-y-16 sm:space-y-24 py-4 sm:py-8 max-w-6xl mx-auto animate-fade-in">
-      {/* Hero Section */}
-      <section className="text-center space-y-6 sm:space-y-8 px-4">
-        {/* Top Highlight Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#f7ede7] border border-[#f0c8ba] text-xs sm:text-sm font-semibold text-[#c96442] shadow-xs">
-          <Sparkles className="w-4 h-4 text-[#c96442]" />
-          <span>School-Wide Notes Sharing & Homework Community</span>
-        </div>
-
-        {/* Main Title */}
-        <div className="space-y-4 max-w-4xl mx-auto">
-          <div className="flex justify-center mb-2">
-            <img
-              src="/logo.png"
-              alt="PadhoOrion Logo"
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-contain shadow-md border border-[#dad9d4]"
-            />
+    <KineticGrid globalColor="terracotta" className="-m-4 sm:-m-6 lg:-m-8">
+      <div className="relative text-[#faf9f5] px-4 sm:px-6 lg:px-8 py-10 sm:py-16 max-w-6xl mx-auto space-y-24 sm:space-y-32">
+        {/* HERO SECTION */}
+        <section className="text-center space-y-8 pt-4 sm:pt-10">
+          {/* Interactive Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.06] border border-white/15 text-xs sm:text-sm font-medium text-[#f3b5a1] backdrop-blur-md shadow-lg shadow-black/20">
+            <span className="w-2 h-2 rounded-full bg-[#c96442] animate-ping" />
+            <span className="font-semibold text-white">Interactive Canvas</span>
+            <span className="text-white/40">•</span>
+            <span className="hidden sm:inline text-white/80">Move cursor to warp grid &bull; Click anywhere to ripple</span>
+            <span className="sm:hidden text-white/80">Tap to ripple grid</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight">
-            Share Notes. Solve Doubts. <br />
-            <span className="text-[#c96442]">Excel Together.</span>
-          </h1>
-
-          <p className="text-base sm:text-xl text-slate-600 max-w-2xl mx-auto font-sans leading-relaxed">
-            PadhoOrion is a private, student-centric academic community for 6th to 10th graders. Discover authentic lecture copies, practice worksheets, handwritten revision guides, and solved textbook Q&As.
-          </p>
-        </div>
-
-        {/* Primary Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-md mx-auto pt-2">
-          <Link
-            href="/register"
-            className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white font-bold text-sm sm:text-base shadow-lg shadow-[#c96442]/30 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
-          >
-            <span>Create Free Student Account</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-
-          <Link
-            href="/login"
-            className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm sm:text-base border border-[#dad9d4] shadow-xs flex items-center justify-center gap-2 transition-colors"
-          >
-            <Lock className="w-4 h-4 text-slate-500" />
-            <span>Student Log In</span>
-          </Link>
-        </div>
-
-        {/* Trust Badges */}
-        <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs sm:text-sm text-slate-500 font-medium">
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-[#34532b]" />
-            <span>100% Free Student Community</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-[#34532b]" />
-            <span>All 5 Grades (6th to 10th)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-[#34532b]" />
-            <span>Protected & Moderated</span>
-          </div>
-        </div>
-
-        {/* Visual Showcase Card */}
-        <div className="pt-8 max-w-4xl mx-auto">
-          <div className="relative rounded-2xl bg-[#262624] p-4 sm:p-8 text-white shadow-2xl border border-[#dad9d4]/20 overflow-hidden text-left">
-            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
-              <div className="flex items-center gap-2.5">
-                <span className="w-3 h-3 rounded-full bg-rose-500 inline-block" />
-                <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" />
-                <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
-                <span className="text-xs text-white/50 font-mono ml-2">padhoorion.internal/portal</span>
-              </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#c96442]/30 text-[#e4bfaf] text-xs font-bold border border-[#c96442]/40">
-                <Lock className="w-3 h-3" />
-                <span>Protected Student Network</span>
+          {/* Main Headline */}
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="flex justify-center mb-4">
+              <div className="relative p-2.5 rounded-3xl bg-white/[0.08] backdrop-blur-md border border-white/15 shadow-2xl shadow-[#c96442]/20">
+                <img
+                  src="/logo.png"
+                  alt="PadhoOrion Logo"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-contain drop-shadow-md"
+                />
               </div>
             </div>
 
-            {/* Preview items inside mockup */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f7efe9] text-[#9c4c2c]">
-                    7th Grade
-                  </span>
-                  <span className="text-[11px] text-white/60">Mathematics</span>
-                </div>
-                <h4 className="font-bold text-sm text-white">
-                  Coordinate Geometry: Complete Practice Worksheet
-                </h4>
-                <p className="text-xs text-white/70 line-clamp-2">
-                  Full step-by-step Cartesian plane drills with solved examples from lesson 4.
-                </p>
-                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-white/60">
-                  <span>Student [7th Grade]</span>
-                  <span className="text-[#e4bfaf]">12 Downloads</span>
-                </div>
-              </div>
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] text-white">
+              Real Student Notes. <br />
+              <span className="bg-gradient-to-r from-[#c96442] via-[#ea8d6c] to-[#c96442] bg-clip-text text-transparent">
+                Zero AI Slop.
+              </span>
+            </h1>
 
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f2effb] text-[#5e4db2]">
-                    9th Grade
-                  </span>
-                  <span className="text-[11px] text-white/60">Physics</span>
-                </div>
-                <h4 className="font-bold text-sm text-white">
-                  Newton's Laws of Motion & Momentum Revision Guide
-                </h4>
-                <p className="text-xs text-white/70 line-clamp-2">
-                  Handwritten diagrams, free body illustrations, and formula sheets for term exams.
-                </p>
-                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-white/60">
-                  <span>aarav_sharma [9th Grade]</span>
-                  <span className="text-[#e4bfaf]">18 Downloads</span>
-                </div>
-              </div>
+            <p className="text-base sm:text-xl text-[#dfdbcf] max-w-2xl mx-auto font-sans leading-relaxed pt-2">
+              PadhoOrion is the student-only notes exchange. Direct scanned copies, teacher-assigned worksheets, formula sheets, and solved revision papers from your own classmates across 6th to 10th grades.
+            </p>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto pt-2">
+            <Link
+              href="/register"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#c96442] hover:bg-[#a84f32] text-white font-extrabold text-sm sm:text-base shadow-xl shadow-[#c96442]/30 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+            >
+              <span>Join PadhoOrion Free</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+
+            <Link
+              href="/login"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-white font-bold text-sm sm:text-base border border-white/20 backdrop-blur-md transition-all flex items-center justify-center gap-2"
+            >
+              <Lock className="w-4 h-4 text-[#ea8d6c]" />
+              <span>Student Sign In</span>
+            </Link>
+          </div>
+
+          {/* Value Props Strip */}
+          <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs sm:text-sm text-white/70 font-medium">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#ea8d6c]" />
+              <span>100% Free Student Platform</span>
             </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#ea8d6c]" />
+              <span>No Paywalls or Hidden Fees</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#ea8d6c]" />
+              <span>Grades 6th through 10th</span>
+            </div>
+          </div>
+        </section>
 
-            <div className="mt-6 p-4 rounded-xl bg-[#c96442]/20 border border-[#c96442]/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-              <div>
-                <p className="font-bold text-sm text-[#faece7]">
-                  To access thousands of verified notes, sign in with your student account.
-                </p>
-                <p className="text-xs text-[#faece7]/80">
-                  Accounts are open to all registered school students.
-                </p>
-              </div>
-              <Link
-                href="/login"
-                className="shrink-0 px-4 py-2 rounded-lg bg-[#c96442] hover:bg-[#b05536] text-white text-xs font-bold transition-colors"
+        {/* GRADE HUBS (6th to 10th) */}
+        <section className="space-y-8">
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#c96442]/20 border border-[#c96442]/40 text-[#f3b5a1] text-xs font-bold uppercase tracking-wider">
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span>Curriculum Segments</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+              Explore Academic Grades
+            </h2>
+            <p className="text-sm sm:text-base text-white/60">
+              Browse notes tailored specifically to your syllabus. Switch freely between grades at any time.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {gradeDetails.map((item) => (
+              <div
+                key={item.grade}
+                className="group relative p-6 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/10 hover:border-[#c96442]/60 hover:bg-white/[0.07] transition-all duration-300 flex flex-col justify-between space-y-4 shadow-xl"
               >
-                Log In to Access
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">{item.icon}</span>
+                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#c96442]/25 text-[#f3b5a1] border border-[#c96442]/40 font-mono">
+                      {item.grade}
+                    </span>
+                  </div>
+
+                  <h3 className="font-extrabold text-lg text-white group-hover:text-[#ea8d6c] transition-colors">
+                    {item.grade}
+                  </h3>
+                  <p className="text-xs text-white/70 font-sans">
+                    {item.focus}
+                  </p>
+
+                  <div className="pt-2 border-t border-white/10 space-y-1.5">
+                    {item.subjects.map((sub, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs text-white/80">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#c96442]" />
+                        <span className="truncate">{sub}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Link
+                  href="/register"
+                  className="mt-3 inline-flex items-center justify-between w-full py-2 px-3 rounded-xl bg-white/[0.05] hover:bg-[#c96442] text-xs font-bold text-white transition-colors border border-white/10 group-hover:border-[#c96442]"
+                >
+                  <span>Explore {item.grade} Notes</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            ))}
+
+            {/* Quick Access Card */}
+            <div className="p-6 rounded-2xl bg-gradient-to-br from-[#c96442]/30 via-black/40 to-[#c96442]/10 backdrop-blur-xl border border-[#c96442]/50 text-white flex flex-col justify-between space-y-4 shadow-xl">
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-[#c96442] text-white flex items-center justify-center font-bold text-lg shadow-md">
+                  ★
+                </div>
+                <h3 className="font-black text-xl text-white">
+                  Cross-Grade Exploration
+                </h3>
+                <p className="text-xs text-white/80 leading-relaxed">
+                  Your registered grade never restricts you. 8th graders can preview 9th grade topics in advance, and 10th graders can revise 9th grade foundations before board exams.
+                </p>
+              </div>
+
+              <Link
+                href="/register"
+                className="w-full py-2.5 px-4 rounded-xl bg-[#c96442] hover:bg-[#a84f32] text-white font-bold text-xs text-center transition-all shadow-md"
+              >
+                Create Account to Access All
               </Link>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* 5 Distinct Categories Section */}
-      <section className="space-y-8 px-4">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#faece7] text-[#c96442] text-xs font-bold">
-            <Layers className="w-3.5 h-3.5" />
-            <span>Structured Organization</span>
+        {/* 5 RESOURCE FORMATS */}
+        <section className="space-y-8">
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/15 text-white/80 text-xs font-bold uppercase tracking-wider">
+              <Layers className="w-3.5 h-3.5 text-[#ea8d6c]" />
+              <span>Structured Study Formats</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+              Every Format You Need to Ace Exams
+            </h2>
+            <p className="text-sm sm:text-base text-white/60">
+              No disorganized camera rolls. Everything is tagged by grade, subject, and resource format.
+            </p>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            5 Dedicated Resource Categories
-          </h2>
-          <p className="text-sm sm:text-base text-slate-500 font-sans">
-            Every grade level is segmented into 5 focused categories so you can quickly find whatever you need.
-          </p>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {CATEGORIES.map((cat, idx) => (
-            <div
-              key={cat.name}
-              className="p-6 bg-white border border-[#dad9d4] rounded-2xl shadow-xs hover:shadow-md transition-all space-y-3"
-            >
-              <div className="w-10 h-10 rounded-xl bg-[#faece7] text-[#c96442] flex items-center justify-center font-bold text-base">
-                0{idx + 1}
-              </div>
-              <h3 className="font-bold text-lg text-slate-900">{cat.name}</h3>
-              <p className="text-sm text-slate-600 leading-relaxed font-sans">
-                {cat.description}
-              </p>
-              <div className="text-xs text-[#c96442] font-semibold pt-2 flex items-center gap-1">
-                <span>Organized by Subject & Chapter</span>
-              </div>
-            </div>
-          ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {noteCategories.map((cat) => (
+              <div
+                key={cat.num}
+                className="p-6 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/10 hover:border-white/25 transition-all space-y-3 shadow-lg flex flex-col justify-between"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-sm font-black text-[#ea8d6c]">
+                      {cat.num}
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/[0.08] text-white/80 border border-white/10">
+                      {cat.badge}
+                    </span>
+                  </div>
 
-          {/* Open Access Feature Card */}
-          <div className="p-6 bg-gradient-to-br from-[#c96442] to-[#b05536] text-white rounded-2xl shadow-md space-y-3 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold text-base">
-                ✦
+                  <h3 className="font-extrabold text-base text-white">
+                    {cat.title}
+                  </h3>
+
+                  <p className="text-xs text-white/70 leading-relaxed font-sans">
+                    {cat.desc}
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-white/50">
+                  <span>Organized by Chapter</span>
+                  <span className="text-[#ea8d6c] font-semibold">PDF Downloads</span>
+                </div>
               </div>
-              <h3 className="font-bold text-lg text-white">Open Grade Access</h3>
-              <p className="text-sm text-white/90 leading-relaxed font-sans">
-                A student's enrolled grade never restricts their curiosity. 7th graders can preview 8th grade material, and 10th graders can revise fundamentals anytime.
-              </p>
+            ))}
+
+            {/* Quick Upload Teaser */}
+            <div className="p-6 rounded-2xl bg-[#c96442]/20 backdrop-blur-xl border border-[#c96442]/40 text-white flex flex-col justify-between space-y-3 shadow-lg">
+              <div className="space-y-2">
+                <div className="p-2 rounded-lg bg-[#c96442] text-white w-fit">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <h3 className="font-extrabold text-base text-white">Have Good Notes?</h3>
+                <p className="text-xs text-white/80 leading-relaxed">
+                  Upload your handwritten study copies or formula sheets to help your classmates and earn community recognition.
+                </p>
+              </div>
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#f3b5a1] hover:text-white transition-colors"
+              >
+                <span>Upload your first note</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
+          </div>
+        </section>
+
+        {/* STATS & COMMUNITY TRUST */}
+        <section className="p-8 sm:p-12 rounded-3xl bg-white/[0.04] backdrop-blur-2xl border border-white/10 shadow-2xl">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+            <div className="space-y-1">
+              <div className="text-3xl sm:text-5xl font-black text-white font-mono">5</div>
+              <div className="text-xs sm:text-sm text-white/60 font-medium">Academic Grades</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-3xl sm:text-5xl font-black text-[#ea8d6c] font-mono">100%</div>
+              <div className="text-xs sm:text-sm text-white/60 font-medium">Student Verified</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-3xl sm:text-5xl font-black text-white font-mono">5</div>
+              <div className="text-xs sm:text-sm text-white/60 font-medium">Study Formats</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-3xl sm:text-5xl font-black text-[#ea8d6c] font-mono">24/7</div>
+              <div className="text-xs sm:text-sm text-white/60 font-medium">Peer Collaboration</div>
+            </div>
+          </div>
+        </section>
+
+        {/* BOTTOM CALL TO ACTION */}
+        <section className="text-center p-8 sm:p-14 rounded-3xl bg-gradient-to-b from-white/[0.08] to-white/[0.03] backdrop-blur-xl border border-white/15 shadow-2xl space-y-6">
+          <div className="max-w-2xl mx-auto space-y-3">
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+              Ready to Ace Your Next School Exam?
+            </h2>
+            <p className="text-sm sm:text-base text-white/70">
+              Sign up in 30 seconds. Download notes, request worksheets, and study alongside your classmates.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <Link
               href="/register"
-              className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-white bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors w-fit"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#c96442] hover:bg-[#a84f32] text-white font-extrabold text-sm sm:text-base shadow-xl shadow-[#c96442]/30 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
             >
-              <span>Join Now</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span>Create Free Student Account</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+
+            <Link
+              href="/login"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-white font-bold text-sm sm:text-base border border-white/20 transition-all flex items-center justify-center gap-2"
+            >
+              <span>Log In to PadhoOrion</span>
             </Link>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Grade Coverage (6th to 10th) */}
-      <section className="p-8 sm:p-12 bg-white border border-[#dad9d4] rounded-3xl shadow-sm space-y-8 mx-4">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Complete Curriculum Coverage
-          </h2>
-          <p className="text-sm text-slate-500 font-sans">
-            From foundational middle school concepts to high school board preparations.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-          {GRADES.map((g) => (
-            <div
-              key={g}
-              className="p-4 rounded-xl border border-[#dad9d4] bg-[#faf9f5] text-center space-y-2"
-            >
-              <div className="text-base font-extrabold text-slate-900">{g}</div>
-              <p className="text-xs text-slate-500 font-sans">
-                Math, Science, Social Studies, English, Computer Science
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Why PadhoOrion Section */}
-      <section className="space-y-8 px-4">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f7efe9] text-[#9c4c2c] text-xs font-bold">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Built For Authentic Learning</span>
+        {/* FOOTER */}
+        <footer className="pt-6 border-t border-white/10 text-center text-xs text-white/40 space-y-2">
+          <div className="flex items-center justify-center gap-2">
+            <img src="/logo.png" alt="PadhoOrion Logo" className="w-5 h-5 rounded object-contain opacity-80" />
+            <span className="font-bold text-white/70">PadhoOrion Community</span>
+            <span>&bull;</span>
+            <span>Made for Students</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Academic Integrity & Student Privacy
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 bg-white border border-[#dad9d4] rounded-2xl shadow-xs space-y-3">
-            <div className="p-2.5 rounded-xl bg-[#faece7] text-[#c96442] w-fit">
-              <Users className="w-5 h-5" />
-            </div>
-            <h3 className="font-bold text-base text-slate-900">
-              Grade Tagged Everywhere
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-600 font-sans leading-relaxed">
-              Every author has their current standing attached to comments, notes, and profiles (e.g. <code>Student [7th Grade]</code>), building transparent peer collaboration.
-            </p>
-          </div>
-
-          <div className="p-6 bg-white border border-[#dad9d4] rounded-2xl shadow-xs space-y-3">
-            <div className="p-2.5 rounded-xl bg-[#faece7] text-[#c96442] w-fit">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <h3 className="font-bold text-base text-slate-900">
-              Confirmation Modals
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-600 font-sans leading-relaxed">
-              Zero accidental uploads or misplaced remarks. Double confirmation modals always verify your destination grade and subject before publishing.
-            </p>
-          </div>
-
-          <div className="p-6 bg-white border border-[#dad9d4] rounded-2xl shadow-xs space-y-3">
-            <div className="p-2.5 rounded-xl bg-[#faece7] text-[#c96442] w-fit">
-              <Lock className="w-5 h-5" />
-            </div>
-            <h3 className="font-bold text-base text-slate-900">
-              Strict Access Control
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-600 font-sans leading-relaxed">
-              Educational materials, student identities, and peer discussions are strictly preserved for verified registered students.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Bottom CTA Banner */}
-      <section className="mx-4 p-8 sm:p-14 rounded-3xl bg-gradient-to-br from-[#262624] via-[#353124] to-[#1e1c17] text-white shadow-xl border border-[#dad9d4]/20 text-center space-y-6">
-        <div className="max-w-2xl mx-auto space-y-3">
-          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-            Ready to Explore School Notes?
-          </h2>
-          <p className="text-sm sm:text-base text-white/80 font-sans">
-            Create your account in under 30 seconds and start sharing and downloading verified school notes.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
-          <Link
-            href="/register"
-            className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white font-bold text-sm sm:text-base shadow-lg shadow-[#c96442]/30 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
-          >
-            <span>Create Free Account</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link
-            href="/login"
-            className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm sm:text-base border border-white/20 transition-colors flex items-center justify-center gap-2"
-          >
-            <span>Sign In to PadhoOrion</span>
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="pt-8 border-t border-[#dad9d4] text-center text-xs text-slate-500 space-y-2 px-4">
-        <div className="flex items-center justify-center gap-2">
-          <img src="/logo.png" alt="PadhoOrion Logo" className="w-6 h-6 rounded-md object-contain" />
-          <span className="font-bold text-slate-800">PadhoOrion</span>
-          <span>• School Notes-Sharing & Homework Community</span>
-        </div>
-        <p>© 2026 PadhoOrion. All student contributions are protected and shared for educational purposes.</p>
-      </footer>
-    </div>
+          <p>© 2026 PadhoOrion. All student contributions are protected and shared for educational purposes.</p>
+        </footer>
+      </div>
+    </KineticGrid>
   );
 }
-
