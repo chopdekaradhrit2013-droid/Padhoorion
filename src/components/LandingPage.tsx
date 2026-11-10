@@ -98,10 +98,10 @@ export function LandingPage() {
           {/* Interactive Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#fbeee8] border border-[#f5d0c2] text-xs sm:text-sm font-semibold text-[#c96442] shadow-xs">
             <span className="w-2 h-2 rounded-full bg-[#c96442] animate-ping" />
-            <span className="font-bold text-[#c96442]">Interactive Canvas</span>
+            <span className="font-bold text-[#c96442]">PadhoOrion Community</span>
             <span className="text-[#c96442]/40">•</span>
-            <span className="hidden sm:inline text-[#78716c]">Move cursor to warp grid &bull; Click anywhere to ripple</span>
-            <span className="sm:hidden text-[#78716c]">Tap to ripple grid</span>
+            <span className="hidden sm:inline text-[#78716c]">Peer Notes &bull; Worksheets &bull; Exam Revision</span>
+            <span className="sm:hidden text-[#78716c]">Student Community</span>
           </div>
 
           {/* Main Headline */}
@@ -117,14 +117,14 @@ export function LandingPage() {
             </div>
 
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] text-[#1c1917]">
-              Real Student Notes. <br />
+              PadhoOrion <br />
               <span className="bg-gradient-to-r from-[#c96442] via-[#e86b3a] to-[#d95f2d] bg-clip-text text-transparent">
-                Zero AI Slop.
+                Study Smarter. Ace Together.
               </span>
             </h1>
 
             <p className="text-base sm:text-xl text-[#57534e] max-w-2xl mx-auto font-sans leading-relaxed pt-2">
-              PadhoOrion is the student-only notes exchange. Direct scanned copies, teacher-assigned worksheets, formula sheets, and solved revision papers from your own classmates across 6th to 10th grades.
+              The premier school learning & notes network. Discover peer-verified handwritten lecture notes, formula sheets, chapter summaries, and solved practice papers across 6th to 10th grades.
             </p>
           </div>
 
