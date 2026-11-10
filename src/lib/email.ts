@@ -132,11 +132,20 @@ export async function sendVerificationEmail({
         },
       });
 
+      const senderAddress = smtpUser.includes("@") 
+        ? `"PadhoOrion Verification" <${smtpUser}>`
+        : smtpFrom;
+
       const info = await transporter.sendMail({
-        from: smtpFrom,
+        from: senderAddress,
         to,
-        subject: `Your PadhoOrion Verification Code: ${code}`,
-        text: `Welcome to PadhoOrion! Your 6-digit email verification code is: ${code}\n\nEnter this code on the verification page to activate your account.`,
+        subject: `${code} is your PadhoOrion verification code`,
+        headers: {
+          "X-Priority": "1 (Highest)",
+          "X-MSMail-Priority": "High",
+          "Importance": "High",
+        },
+        text: `Welcome to PadhoOrion! Your 6-digit email verification code is: ${code}\n\nEnter this code on the verification page to activate your student account.\nThis code remains valid for 24 hours.`,
         html: htmlContent,
       });
 

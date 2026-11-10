@@ -40,6 +40,9 @@ export default function AdminDashboardPage() {
   const [emailTesting, setEmailTesting] = useState(false);
   const [emailSettingsNotice, setEmailSettingsNotice] = useState<string | null>(null);
   const [emailSettingsError, setEmailSettingsError] = useState<string | null>(null);
+  const [testCodeEmail, setTestCodeEmail] = useState("chopdekaradhrit2013@gmail.com");
+  const [sendingTestCode, setSendingTestCode] = useState(false);
+  const [testCodeResult, setTestCodeResult] = useState<{ code: string; email: string } | null>(null);
 
   // Users tab state
   const [usersList, setUsersList] = useState<any[]>([]);
@@ -185,6 +188,31 @@ export default function AdminDashboardPage() {
       setEmailSettingsError(err.message || "Network error testing Gmail connection.");
     } finally {
       setEmailTesting(false);
+    }
+  };
+
+  const handleSendTestVerificationCode = async () => {
+    setSendingTestCode(true);
+    setEmailSettingsNotice(null);
+    setEmailSettingsError(null);
+    setTestCodeResult(null);
+
+    try {
+      const res = await fetch("/api/admin/email-settings/test-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetEmail: testCodeEmail.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to dispatch verification email");
+      }
+      setEmailSettingsNotice(`✅ Verification code [${data.code}] delivered live to ${testCodeEmail.trim()}! Check your inbox.`);
+      setTestCodeResult({ code: data.code, email: testCodeEmail.trim() });
+    } catch (err: any) {
+      setEmailSettingsError(err.message || "Failed to send verification code");
+    } finally {
+      setSendingTestCode(false);
     }
   };
 
@@ -1113,6 +1141,51 @@ export default function AdminDashboardPage() {
               </ol>
               <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-950 text-[11px] leading-relaxed">
                 💡 <strong>Safety Guarantee:</strong> If live Gmail is not yet active, students signing up will see their 6-digit code on screen so registration is never blocked.
+              </div>
+            </div>
+
+            {/* Live Verification Test Tool */}
+            <div className="md:col-span-2 pt-4 border-t border-slate-200">
+              <div className="p-5 bg-amber-50/60 border border-amber-200/80 rounded-2xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                      <span>⚡ Instant 6-Digit Code Sender (Live Inbox Test)</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Send a real 6-digit verification code email to any Gmail address right now to verify inbox delivery in less than 2 seconds.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                  <input
+                    type="email"
+                    value={testCodeEmail}
+                    onChange={(e) => setTestCodeEmail(e.target.value)}
+                    placeholder="Enter your Gmail address"
+                    className="w-full sm:flex-1 px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSendTestVerificationCode}
+                    disabled={sendingTestCode || !testCodeEmail.trim()}
+                    className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
+                  >
+                    {sendingTestCode ? "Dispatching Code to Inbox..." : "🚀 Send 6-Digit Code Now"}
+                  </button>
+                </div>
+
+                {testCodeResult && (
+                  <div className="mt-3 p-3 bg-white border border-emerald-300 rounded-xl flex items-center justify-between gap-2 text-xs">
+                    <span className="text-emerald-800 font-semibold">
+                      Dispatched to <strong>{testCodeResult.email}</strong>! 6-Digit Code:
+                    </span>
+                    <span className="font-mono text-base font-extrabold text-indigo-700 tracking-widest bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200">
+                      {testCodeResult.code}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

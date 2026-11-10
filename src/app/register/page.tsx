@@ -162,9 +162,46 @@ export default function RegisterPage() {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm rounded-xl flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+          <div className="mb-4 p-3.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm rounded-xl">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+              <span className="font-semibold">{error}</span>
+            </div>
+            {error.includes("already registered") && (
+              <div className="mt-3 pt-2.5 border-t border-rose-200/80 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setError(null);
+                    setLoading(true);
+                    try {
+                      const res = await fetch("/api/auth/verify", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: "resend", email: email.toLowerCase().trim() }),
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        setStep("verify");
+                        setSuccessNotice(`Fresh 6-digit verification code dispatched to ${email}! Check your Gmail inbox now.`);
+                      } else {
+                        setError(data.error || "Failed to send verification code");
+                      }
+                    } catch (e: any) {
+                      setError(e.message);
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
+                >
+                  📩 Send Verification Code to {email || "this email"} Now
+                </button>
+                <Link href="/login" className="text-xs text-rose-800 underline hover:text-rose-950 font-medium ml-1">
+                  or Log in
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
@@ -275,6 +312,9 @@ export default function RegisterPage() {
                 />
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
               </div>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Your 6-digit code will be emailed here. (Gmail plus alias like <span className="font-mono text-terracotta font-semibold">yourname+student@gmail.com</span> works instantly!)
+              </p>
             </div>
 
             {/* Mandatory Grade Selection */}

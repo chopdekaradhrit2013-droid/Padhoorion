@@ -20,17 +20,13 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "No account found with this email." }, { status: 404 });
       }
 
-      if (existingUser.isVerified) {
-        return NextResponse.json({ message: "This account is already verified. You can log in directly." });
-      }
-
       const newCode = Math.floor(100000 + Math.random() * 900000).toString();
       await prisma.user.update({
         where: { id: existingUser.id },
         data: { verificationToken: newCode },
       });
 
-      // Dispatch new code to Gmail/inbox
+      // Dispatch new code to Gmail/inbox immediately
       const emailResult = await sendVerificationEmail({
         to: cleanEmail,
         username: existingUser.username,
