@@ -1,17 +1,28 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hashPassword, createSessionToken, COOKIE_NAME } from "@/lib/auth";
+import { hashPassword } from "@/lib/auth";
 import { GRADES } from "@/lib/constants";
 import { sendVerificationEmail } from "@/lib/email";
+import { checkRateLimit } from "@/lib/rate-limit";
 import crypto from "crypto";
+
+const CODE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function createVerificationCode() {
+  return crypto.randomInt(100000, 1000000).toString();
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { username, email, password, confirmPassword, grade, avatarUrl } = body;
 
-    // Validation
-    if (!username || !email || !password || !grade) {
+    if (
+      typeof username !== "string" ||
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      typeof grade !== "string"
+    ) {
       return NextResponse.json(
         { error: "Username, email, password, and grade are required." },
         { status: 400 }
@@ -19,14 +30,20 @@ export async function POST(request: Request) {
     }
 
     const cleanUsername = username.trim();
-    if (cleanUsername.length < 3) {
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (cleanUsername.length < 3 || cleanUsername.length > 30) {
       return NextResponse.json(
-        { error: "Username must be at least 3 characters long." },
+        { error: "Username must be between 3 and 30 characters." },
         { status: 400 }
       );
     }
 
-    if (!GRADES.includes(grade as any)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
+    }
+
+    if (!GRADES.includes(grade as (typeof GRADES)[number])) {
       return NextResponse.json(
         { error: "Please select a valid grade from 6th to 10th Grade." },
         { status: 400 }
@@ -41,134 +58,83 @@ export async function POST(request: Request) {
     }
 
     if (password !== confirmPassword) {
-      return NextResponse.json(
-        { error: "Passwords do not match." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Passwords do not match." }, { status: 400 });
     }
 
-    const cleanEmail = email.toLowerCase().trim();
-
-    // Check if email has been permanently banned
-    const banned = await prisma.bannedEmail.findUnique({
-      where: { email: cleanEmail },
-    });
-
+    const banned = await prisma.bannedEmail.findUnique({ where: { email: cleanEmail } });
     if (banned) {
       return NextResponse.json(
-        {
-          error: `This email address (${cleanEmail}) has been permanently banned from PadhoOrion. Reason: ${banned.reason || "Community policy violation"}. Registration is not allowed.`,
-        },
+        { error: "This email address is not allowed to register." },
         { status: 403 }
       );
     }
 
-    // Check if username or email already exists
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { username: { equals: cleanUsername } },
-          { email: { equals: cleanEmail } },
-        ],
-      },
-    });
-
-    if (existingUser) {
-      // If the email is already registered, allow re-verification / testing!
-      if (existingUser.email.toLowerCase() === cleanEmail.toLowerCase()) {
-        const passwordHash = await hashPassword(password);
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-        const updated = await prisma.user.update({
-          where: { id: existingUser.id },
-          data: {
-            passwordHash,
-            verificationToken: verificationCode,
-            isVerified: false,
-            grade: grade || existingUser.grade,
-          },
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            grade: true,
-            role: true,
-            avatarUrl: true,
-            isVerified: true,
-          },
-        });
-
-        // Send verification code directly to user's real email inbox
-        const emailResult = await sendVerificationEmail({
-          to: cleanEmail,
-          username: existingUser.username,
-          code: verificationCode,
-        });
-
-        return NextResponse.json(
-          {
-            message: `A 6-digit verification code has been sent to your email inbox (${cleanEmail}).`,
-            user: updated,
-            requiresVerification: true,
-            emailDelivered: emailResult.delivered,
-            verificationCode,
-          },
-          { status: 201 }
-        );
-      }
-
-      if (existingUser.username.toLowerCase() === cleanUsername.toLowerCase()) {
-        return NextResponse.json(
-          { error: "Username is already taken. Please choose another." },
-          { status: 409 }
-        );
-      }
+    const existingByEmail = await prisma.user.findUnique({ where: { email: cleanEmail } });
+    if (existingByEmail?.isVerified) {
+      return NextResponse.json(
+        { error: "This email is already registered. Please log in instead." },
+        { status: 409 }
+      );
     }
 
-    const passwordHash = await hashPassword(password);
-    // Generate 6-digit verification code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const existingByUsername = await prisma.user.findUnique({ where: { username: cleanUsername } });
+    if (existingByUsername && existingByUsername.id !== existingByEmail?.id) {
+      return NextResponse.json(
+        { error: "Username is already taken. Please choose another." },
+        { status: 409 }
+      );
+    }
 
-    const user = await prisma.user.create({
-      data: {
-        username: cleanUsername,
-        email: cleanEmail,
-        passwordHash,
-        grade,
-        avatarUrl: avatarUrl || null,
-        role: "STUDENT",
-        isVerified: false,
-        verificationToken: verificationCode,
-      },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        grade: true,
-        role: true,
-        avatarUrl: true,
-        isVerified: true,
-      },
-    });
+    // Keep an unverified account's original credentials; registration retries must not
+    // silently change its password. The code can be resent from the verification page.
+    const code = createVerificationCode();
+    const expiresAt = new Date(Date.now() + CODE_TTL_MS);
+    const user = existingByEmail
+      ? await prisma.user.update({
+          where: { id: existingByEmail.id },
+          data: { verificationToken: code, verificationTokenExpiry: expiresAt },
+        })
+      : await prisma.user.create({
+          data: {
+            username: cleanUsername,
+            email: cleanEmail,
+            passwordHash: await hashPassword(password),
+            grade,
+            avatarUrl: typeof avatarUrl === "string" && avatarUrl.trim() ? avatarUrl.trim() : null,
+            role: "STUDENT",
+            isVerified: false,
+            verificationToken: code,
+            verificationTokenExpiry: expiresAt,
+          },
+        });
 
-    // Send verification code directly to user's real email inbox (e.g. Gmail)
     const emailResult = await sendVerificationEmail({
       to: cleanEmail,
-      username: cleanUsername,
-      code: verificationCode,
+      username: user.username,
+      code,
     });
+
+    if (!emailResult.delivered) {
+      console.error("Verification email was not delivered:", emailResult.error || "Email provider error");
+      return NextResponse.json(
+        {
+          error: "Your account was created, but the verification email could not be sent. Check the email settings and try resending the code.",
+          requiresVerification: true,
+          email: cleanEmail,
+        },
+        { status: 503 }
+      );
+    }
 
     return NextResponse.json(
       {
-        message: `A 6-digit verification code has been sent to your email inbox (${cleanEmail}).`,
-        user,
+        message: "A verification code has been sent to your email address.",
         requiresVerification: true,
-        emailDelivered: emailResult.delivered,
-        verificationCode,
+        email: cleanEmail,
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(
       { error: "Failed to register user. Please try again." },
@@ -176,4 +142,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
