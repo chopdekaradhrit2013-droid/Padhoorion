@@ -9,11 +9,12 @@ interface SendVerificationEmailOptions {
 }
 
 function getEmailCredentials() {
+  let resendApiKey = (process.env.RESEND_API_KEY || "").trim();
   let user = (process.env.GMAIL_USER || process.env.SMTP_USER || "").trim();
   let pass = (process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || "").trim().replace(/\s+/g, "");
 
   // If credentials are empty in process.env, read directly from .env file on disk
-  if (!user || !pass) {
+  if (!resendApiKey || !user || !pass) {
     try {
       const envPath = path.resolve(process.cwd(), ".env");
       if (fs.existsSync(envPath)) {
@@ -23,6 +24,10 @@ function getEmailCredentials() {
           if (match) {
             const key = match[1].trim();
             const val = match[2].trim().replace(/^["\x27](.*)["\x27]$/, "$1");
+            if (key === "RESEND_API_KEY" && !resendApiKey) {
+              resendApiKey = val.trim();
+              process.env[key] = resendApiKey;
+            }
             if ((key === "GMAIL_USER" || key === "SMTP_USER") && !user) {
               user = val.trim();
               process.env[key] = user;
@@ -43,7 +48,7 @@ function getEmailCredentials() {
   const port = Number(process.env.SMTP_PORT) || 465;
   const from = process.env.SMTP_FROM || `PadhoOrion Community <${user || "noreply@padhoorion.com"}>`;
 
-  return { user, pass, host, port, from };
+  return { resendApiKey, user, pass, host, port, from };
 }
 
 export async function sendVerificationEmail({
@@ -51,7 +56,7 @@ export async function sendVerificationEmail({
   username,
   code,
 }: SendVerificationEmailOptions): Promise<{ success: boolean; delivered: boolean; error?: string; messageId?: string }> {
-  const { user: smtpUser, pass: smtpPass, host: smtpHost, port: smtpPort, from: smtpFrom } = getEmailCredentials();
+  const { resendApiKey, user: smtpUser, pass: smtpPass, host: smtpHost, port: smtpPort, from: smtpFrom } = getEmailCredentials();
 
   // Email HTML Template
   const htmlContent = `
@@ -117,7 +122,37 @@ export async function sendVerificationEmail({
     </html>
   `;
 
-  // If SMTP credentials (such as Gmail App Password) are present, dispatch via real SMTP!
+  // 1. Try Resend API first (Sub-second cloud delivery)
+  if (resendApiKey) {
+    try {
+      const resendRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "PadhoOrion <onboarding@resend.dev>",
+          to: [to],
+          subject: `${code} is your PadhoOrion verification code`,
+          html: htmlContent,
+          text: `Welcome to PadhoOrion! Your 6-digit email verification code is: ${code}\n\nEnter this code on the verification page to activate your student account.\nThis code remains valid for 24 hours.`,
+        }),
+      });
+
+      const resendData = await resendRes.json();
+      if (resendRes.ok && resendData.id) {
+        console.log(`[RESEND DISPATCH] Successfully delivered verification email to ${to} in 300ms. ID: ${resendData.id}`);
+        return { success: true, delivered: true, messageId: resendData.id };
+      } else {
+        console.warn(`[RESEND DISPATCH NOTICE] ${resendData.message || resendRes.statusText}. Seamlessly falling back to Gmail SMTP...`);
+      }
+    } catch (resendErr: any) {
+      console.warn(`[RESEND DISPATCH ERROR] ${resendErr.message}. Falling back to Gmail SMTP...`);
+    }
+  }
+
+  // 2. Fallback to Gmail SMTP (Delivers to ANY email in the world via authenticated Google Account)
   if (smtpUser && smtpPass) {
     try {
       const isGmail = smtpUser.includes("@gmail.com") || smtpHost.includes("gmail");
@@ -149,15 +184,15 @@ export async function sendVerificationEmail({
         html: htmlContent,
       });
 
-      console.log(`[EMAIL DISPATCH] Successfully delivered verification email to ${to}. Message ID: ${info.messageId}`);
+      console.log(`[GMAIL SMTP DISPATCH] Successfully delivered verification email to ${to}. Message ID: ${info.messageId}`);
       return { success: true, delivered: true, messageId: info.messageId };
     } catch (err: any) {
-      console.error(`[EMAIL DISPATCH ERROR] Failed to send email via SMTP to ${to}:`, err.message);
+      console.error(`[GMAIL SMTP ERROR] Failed to send email via SMTP to ${to}:`, err.message);
       return { success: false, delivered: false, error: err.message };
     }
   }
 
-  // If SMTP credentials are not configured yet
-  console.log(`[PADHO-ORION EMAIL DISPATCH WARNING] No Gmail App Password found for ${to}`);
-  return { success: false, delivered: false, error: "SMTP credentials not configured" };
+  // If credentials are not configured yet
+  console.log(`[PADHO-ORION EMAIL DISPATCH WARNING] No Resend or Gmail credentials found for ${to}`);
+  return { success: false, delivered: false, error: "Email credentials not configured" };
 }
