@@ -99,7 +99,7 @@ export function AnnouncementsBanner() {
                     {item.priority} NOTICE
                   </span>
                   <span className="text-xs text-slate-500 font-medium">
-                    From Administration • {item.author?.username || "School Office"}
+                    Posted by Administrator • {item.author?.username || "Adhrit"}
                   </span>
                 </div>
 

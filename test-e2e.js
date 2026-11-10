@@ -271,6 +271,15 @@ async function runTests() {
     });
     assert(testLoginWithNewPass.status === 200, 'Student logs in successfully using newly assigned test password');
 
+    // Clean up transient test objects so database remains clean
+    try {
+      await request('DELETE', `/api/admin/announcements?id=${newAnn.data.announcement.id}`, null, { Cookie: adminCookie });
+      const { PrismaClient } = require('@prisma/client');
+      const p = new PrismaClient();
+      await p.user.delete({ where: { id: regRes.data.user.id } }).catch(() => {});
+      await p.$disconnect();
+    } catch {}
+
     console.log('\n--- ALL TEST SUITES COMPLETED ---');
     if (failures === 0) {
       console.log('SUCCESS: All 22 automated end-to-end tests passed cleanly with 0 failures!');

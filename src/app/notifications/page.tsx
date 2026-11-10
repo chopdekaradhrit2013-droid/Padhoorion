@@ -88,7 +88,7 @@ export default function NotificationsPage() {
             Notifications
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1 font-sans">
-            Stay updated when students comment on your resources, reply to your questions, or when teachers post announcements.
+            Stay updated when students comment on your resources, reply to your questions, or when the administrator posts community announcements.
           </p>
         </div>
 
