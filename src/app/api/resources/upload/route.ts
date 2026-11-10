@@ -89,19 +89,25 @@ export async function POST(request: Request) {
       );
     }
 
-    // Save file locally to public/uploads
-    const uploadsDir = path.join(process.cwd(), "public/uploads");
-    await fs.mkdir(uploadsDir, { recursive: true });
-
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const uniqueFilename = `${Date.now()}-${originalName}`;
-    const destinationPath = path.join(uploadsDir, uniqueFilename);
-
+    // Save file locally to public/uploads, or fallback to Data URL in read-only serverless environment
+    let fileUrl = "";
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    await fs.writeFile(destinationPath, buffer);
 
-    const fileUrl = `/uploads/${uniqueFilename}`;
+    try {
+      const uploadsDir = path.join(process.cwd(), "public/uploads");
+      await fs.mkdir(uploadsDir, { recursive: true });
+
+      const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+      const uniqueFilename = `${Date.now()}-${originalName}`;
+      const destinationPath = path.join(uploadsDir, uniqueFilename);
+
+      await fs.writeFile(destinationPath, buffer);
+      fileUrl = `/uploads/${uniqueFilename}`;
+    } catch (writeErr) {
+      console.warn("Filesystem read-only (serverless environment), falling back to data URL:", writeErr);
+      fileUrl = `data:${file.type};base64,${buffer.toString("base64")}`;
+    }
 
     // Create database resource
     const resource = await prisma.resource.create({
