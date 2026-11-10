@@ -55,7 +55,7 @@ export function LandingPage() {
     },
     {
       grade: "10th Grade",
-      focus: "Board Examination Revision & Mock Banks",
+      focus: "Board Examination Revision & Practice Question Banks",
       subjects: ["Trigonometry & Quadratic Equations", "Chemical Reactions & Electricity", "Nationalism & Global Economy", "Previous Year Question Banks"],
       icon: "🎯",
     },

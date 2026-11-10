@@ -278,74 +278,78 @@ export default async function HomePage() {
       </section>
 
       {/* Popular Resources */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-indigo-600" />
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-              Popular Resources
-            </h2>
+      {popularResources.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-indigo-600" />
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                Popular Resources
+              </h2>
+            </div>
+            <Link
+              href="/grades?sortBy=downloads"
+              className="text-xs sm:text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+            >
+              <span>View Most Downloaded</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
-          <Link
-            href="/grades?sortBy=downloads"
-            className="text-xs sm:text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
-          >
-            <span>View Most Downloaded</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {popularResources.map((resource) => (
-            <ResourceCard key={resource.id} resource={resource as any} />
-          ))}
-        </div>
-      </section>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {popularResources.map((resource) => (
+              <ResourceCard key={resource.id} resource={resource as any} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Recently Active Discussions */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-indigo-600" />
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-            Recently Active Discussions
-          </h2>
-        </div>
+      {recentComments.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-indigo-600" />
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              Recently Active Discussions
+            </h2>
+          </div>
 
-        <div className="space-y-3">
-          {recentComments.map((comment) => (
-            <div
-              key={comment.id}
-              className="p-4 bg-white border border-slate-200 rounded-xl shadow-xs hover:border-indigo-300 transition-colors"
-            >
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <AuthorIdentity
-                  username={comment.author.username}
-                  grade={comment.author.grade}
-                  avatarUrl={comment.author.avatarUrl}
-                  size="sm"
-                />
-                <span className="text-[11px] text-slate-400">
-                  {formatTimeAgo(comment.createdAt)}
-                </span>
+          <div className="space-y-3">
+            {recentComments.map((comment) => (
+              <div
+                key={comment.id}
+                className="p-4 bg-white border border-slate-200 rounded-xl shadow-xs hover:border-indigo-300 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <AuthorIdentity
+                    username={comment.author.username}
+                    grade={comment.author.grade}
+                    avatarUrl={comment.author.avatarUrl}
+                    size="sm"
+                  />
+                  <span className="text-[11px] text-slate-400">
+                    {formatTimeAgo(comment.createdAt)}
+                  </span>
+                </div>
+
+                <p className="text-sm text-slate-700 font-sans italic mb-2">
+                  "{comment.content}"
+                </p>
+
+                <div className="text-xs text-slate-500 flex items-center gap-1">
+                  <span>On resource:</span>
+                  <Link
+                    href={`/resource/${comment.resource.id}`}
+                    className="font-semibold text-indigo-600 hover:underline line-clamp-1"
+                  >
+                    {comment.resource.title} ({comment.resource.grade})
+                  </Link>
+                </div>
               </div>
-
-              <p className="text-sm text-slate-700 font-sans italic mb-2">
-                "{comment.content}"
-              </p>
-
-              <div className="text-xs text-slate-500 flex items-center gap-1">
-                <span>On resource:</span>
-                <Link
-                  href={`/resource/${comment.resource.id}`}
-                  className="font-semibold text-indigo-600 hover:underline line-clamp-1"
-                >
-                  {comment.resource.title} ({comment.resource.grade})
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

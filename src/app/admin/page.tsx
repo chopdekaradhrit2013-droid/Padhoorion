@@ -66,7 +66,7 @@ export default function AdminDashboardPage() {
 
   // Admin test access state
   const [resetModalUser, setResetModalUser] = useState<any | null>(null);
-  const [newPasswordInput, setNewPasswordInput] = useState("TestPass@2026");
+  const [newPasswordInput, setNewPasswordInput] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSuccessMsg, setResetSuccessMsg] = useState<string | null>(null);
 
@@ -721,7 +721,7 @@ export default function AdminDashboardPage() {
                             <button
                               onClick={() => {
                                 setResetModalUser(u);
-                                setNewPasswordInput("TestPass@2026");
+                                setNewPasswordInput("");
                                 setResetSuccessMsg(null);
                               }}
                               title="Set or reset account password for testing"
@@ -1247,13 +1247,13 @@ export default function AdminDashboardPage() {
                       minLength={6}
                       value={newPasswordInput}
                       onChange={(e) => setNewPasswordInput(e.target.value)}
-                      placeholder="e.g. TestPass@2026"
+                      placeholder="Enter new password (min 6 chars)"
                       className="flex-1 px-3 py-2 bg-white border border-[#dad9d4] rounded-xl text-xs font-mono text-[#3d3929] focus:outline-none focus:ring-2 focus:ring-[#c96442]"
                     />
                     <button
                       type="button"
                       onClick={() =>
-                        setNewPasswordInput(`TestPass@${Math.floor(1000 + Math.random() * 9000)}`)
+                        setNewPasswordInput(`Padho@${Math.floor(1000 + Math.random() * 9000)}`)
                       }
                       className="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold"
                     >

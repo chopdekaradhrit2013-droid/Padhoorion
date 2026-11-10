@@ -258,20 +258,8 @@ export default function SettingsPage() {
       <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs text-slate-600 font-medium">
         <div>
           <span className="font-bold text-slate-900">Account Status:</span>{" "}
-          {user.isVerified ? (
-            <span className="text-emerald-700 font-bold">Verified School Account</span>
-          ) : (
-            <span className="text-amber-700 font-bold">Unverified</span>
-          )}
+          <span className="text-emerald-700 font-bold">Active PadhoOrion Member (Full Access)</span>
         </div>
-        {!user.isVerified && (
-          <button
-            onClick={() => router.push("/verify")}
-            className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700"
-          >
-            Verify Email
-          </button>
-        )}
       </div>
     </div>
   );
