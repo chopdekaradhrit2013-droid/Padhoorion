@@ -80,7 +80,7 @@ export async function POST(request: Request) {
         type: "ANNOUNCEMENT",
         title: "School Announcement: " + title.trim(),
         message: content.trim().slice(0, 120) + (content.length > 120 ? "..." : ""),
-        link: "/",
+        link: `/announcements?id=${announcement.id}`,
         isRead: false,
       })),
     });
@@ -108,11 +108,27 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Announcement ID required" }, { status: 400 });
     }
 
-    await prisma.announcement.delete({
+    const announcement = await prisma.announcement.findUnique({
       where: { id },
     });
 
-    return NextResponse.json({ message: "Announcement deleted successfully." });
+    if (announcement) {
+      // Delete all notifications generated for this announcement across all users
+      await prisma.notification.deleteMany({
+        where: {
+          OR: [
+            { type: "ANNOUNCEMENT", title: { contains: announcement.title } },
+            { link: `/announcements?id=${id}` },
+          ],
+        },
+      });
+
+      await prisma.announcement.delete({
+        where: { id },
+      });
+    }
+
+    return NextResponse.json({ message: "Announcement and synced notifications deleted successfully." });
   } catch (error) {
     console.error("Admin delete announcement error:", error);
     return NextResponse.json({ error: "Failed to delete announcement" }, { status: 500 });

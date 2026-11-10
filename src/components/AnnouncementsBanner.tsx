@@ -23,6 +23,15 @@ export function AnnouncementsBanner() {
   const [dismissed, setDismissed] = useState<string[]>([]);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("padho_dismissed_announcements");
+      if (saved) {
+        setDismissed(JSON.parse(saved));
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
     async function fetchAnnouncements() {
       try {
         const res = await fetch("/api/announcements/active");
@@ -48,7 +57,13 @@ export function AnnouncementsBanner() {
   }
 
   const handleDismiss = (id: string) => {
-    setDismissed((prev) => [...prev, id]);
+    setDismissed((prev) => {
+      const updated = [...prev, id];
+      try {
+        localStorage.setItem("padho_dismissed_announcements", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
   };
 
   return (

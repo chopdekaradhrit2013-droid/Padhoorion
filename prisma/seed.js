@@ -25,7 +25,7 @@ async function main() {
       username: 'Adhrit',
       email: 'chopdekaradhrit2013@gmail.com',
       passwordHash: adminHash,
-      grade: '10th Grade',
+      grade: '8th Grade',
       role: 'ADMIN',
       isVerified: true,
       bio: 'Administrator of PadhoOrion school community.',

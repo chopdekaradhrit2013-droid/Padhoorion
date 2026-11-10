@@ -83,3 +83,38 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to update notification." }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const user = await getAuthUserFromRequest();
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
+    const { searchParams } = new URL(request.url);
+    const notificationId = searchParams.get("id");
+    const clearAll = searchParams.get("clearAll") === "true";
+
+    if (clearAll) {
+      await prisma.notification.deleteMany({
+        where: { userId: user.id },
+      });
+      return NextResponse.json({ message: "All notifications cleared." });
+    }
+
+    if (notificationId) {
+      await prisma.notification.deleteMany({
+        where: {
+          id: notificationId,
+          userId: user.id,
+        },
+      });
+      return NextResponse.json({ message: "Notification deleted." });
+    }
+
+    return NextResponse.json({ error: "Notification ID or clearAll parameter required." }, { status: 400 });
+  } catch (error) {
+    console.error("Delete notification error:", error);
+    return NextResponse.json({ error: "Failed to delete notification." }, { status: 500 });
+  }
+}
