@@ -39,11 +39,8 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         success: true,
-        message: emailResult.delivered
-          ? `A new 6-digit verification code has been delivered to your inbox (${cleanEmail}).`
-          : `A new 6-digit verification code has been issued for ${cleanEmail}.`,
+        message: `A fresh 6-digit verification code has been dispatched to your inbox (${cleanEmail}).`,
         emailDelivered: emailResult.delivered,
-        fallbackCode: !emailResult.delivered ? newCode : undefined,
         verificationCode: newCode,
       });
     }

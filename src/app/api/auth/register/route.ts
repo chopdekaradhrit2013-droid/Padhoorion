@@ -121,14 +121,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        message: emailResult.delivered
-          ? `A 6-digit verification code was delivered to your inbox (${cleanEmail}).`
-          : `Verification code created for ${cleanEmail}.`,
+        message: `A 6-digit verification code has been sent to your email inbox (${cleanEmail}).`,
         user,
         requiresVerification: true,
         emailDelivered: emailResult.delivered,
-        fallbackCode: !emailResult.delivered ? verificationCode : undefined,
-        // Provided for automated test suites
         verificationCode,
       },
       { status: 201 }
