@@ -122,6 +122,23 @@ export default async function HomePage() {
       {/* Announcements Banner */}
       <AnnouncementsBanner />
 
+      {/* Guest Landing Preview Shortcut for Logged-In Users */}
+      <div className="p-3.5 bg-[#181614] border border-[#c96442]/50 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white shadow-md">
+        <div className="flex items-center gap-2.5">
+          <Sparkles className="w-4 h-4 text-[#ea8d6c] shrink-0" />
+          <span>
+            You are logged in as <strong>{user?.username}</strong>. Want to see the new interactive <strong>KineticGrid</strong> landing page?
+          </span>
+        </div>
+        <Link
+          href="/landing"
+          className="shrink-0 px-3.5 py-1.5 bg-[#c96442] hover:bg-[#a84f32] text-white font-bold rounded-xl transition shadow-xs flex items-center gap-1.5"
+        >
+          <span>Preview Landing Page</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+
       {/* Hero Banner: Claude Remix warm dark charcoal / terracotta gradient */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#262624] via-[#353124] to-[#1e1c17] text-white p-6 sm:p-10 shadow-xl shadow-stone-900/20 border border-[#dad9d4]/20">
         <div className="relative z-10 max-w-2xl">

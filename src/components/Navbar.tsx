@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Search,
   BookOpen,
@@ -32,6 +32,9 @@ export function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isLandingPage = pathname === "/landing" || (!user && pathname === "/");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,14 +93,24 @@ export function Navbar() {
           </Link>
         </div>
       )}
-      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs">
+      <header
+        className={`sticky top-0 z-40 w-full backdrop-blur-md transition-colors ${
+          isLandingPage
+            ? "bg-[#181614]/85 border-b border-white/10 text-white shadow-xl shadow-black/20"
+            : "bg-white/95 border-b border-slate-200/90 shadow-xs"
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           {/* Brand & Mobile Hamburger */}
           <div className="flex items-center gap-3">
             {user && (
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+                className={`md:hidden p-2 rounded-lg transition-colors ${
+                  isLandingPage
+                    ? "text-white/80 hover:bg-white/10"
+                    : "text-slate-700 hover:bg-slate-100"
+                }`}
                 aria-label="Toggle navigation menu"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -108,13 +121,23 @@ export function Navbar() {
               <img
                 src="/logo.png"
                 alt="PadhoOrion Logo"
-                className="w-10 h-10 rounded-xl object-contain shadow-xs border border-slate-200"
+                className="w-10 h-10 rounded-xl object-contain shadow-xs border border-white/10"
               />
               <div>
-                <span className="font-extrabold text-xl tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
+                <span
+                  className={`font-extrabold text-xl tracking-tight transition-colors ${
+                    isLandingPage
+                      ? "text-white group-hover:text-[#ea8d6c]"
+                      : "text-slate-900 group-hover:text-[#c96442]"
+                  }`}
+                >
                   PadhoOrion
                 </span>
-                <span className="block text-[10px] uppercase font-bold tracking-widest text-indigo-600 -mt-1 font-sans">
+                <span
+                  className={`block text-[10px] uppercase font-bold tracking-widest -mt-1 font-sans ${
+                    isLandingPage ? "text-[#ea8d6c]" : "text-[#c96442]"
+                  }`}
+                >
                   School Community
                 </span>
               </div>
@@ -244,6 +267,15 @@ export function Navbar() {
                           </Link>
                         )}
 
+                        <Link
+                          href="/landing"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:text-[#c96442] hover:bg-[#c96442]/10 transition-colors"
+                        >
+                          <Sparkles className="w-4 h-4 text-[#c96442]" />
+                          <span>View Landing Page</span>
+                        </Link>
+
                         <div className="border-t border-slate-100 my-1" />
 
                         <button
@@ -265,13 +297,15 @@ export function Navbar() {
               <div className="flex items-center gap-2.5">
                 <Link
                   href="/login"
-                  className="px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-indigo-600 transition-colors"
+                  className={`px-3.5 py-2 text-xs sm:text-sm font-semibold transition-colors ${
+                    isLandingPage ? "text-white/80 hover:text-white" : "text-slate-700 hover:text-[#c96442]"
+                  }`}
                 >
                   Log In
                 </Link>
                 <Link
                   href="/register"
-                  className="px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-500/20 transition-all hover:shadow-md"
+                  className="px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-[#c96442] hover:bg-[#b05536] text-white shadow-sm shadow-[#c96442]/20 transition-all hover:shadow-md"
                 >
                   Join Community
                 </Link>

@@ -11,6 +11,7 @@ const COOKIE_NAME = "padho_session";
 // Public web routes accessible without login
 const PUBLIC_PAGE_ROUTES = [
   "/",
+  "/landing",
   "/login",
   "/register",
   "/forgot-password",
