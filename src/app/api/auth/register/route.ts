@@ -46,12 +46,28 @@ export async function POST(request: Request) {
       );
     }
 
+    const cleanEmail = email.toLowerCase().trim();
+
+    // Check if email has been permanently banned
+    const banned = await prisma.bannedEmail.findUnique({
+      where: { email: cleanEmail },
+    });
+
+    if (banned) {
+      return NextResponse.json(
+        {
+          error: `This email address (${cleanEmail}) has been permanently banned from PadhoOrion. Reason: ${banned.reason || "Community policy violation"}. Registration is not allowed.`,
+        },
+        { status: 403 }
+      );
+    }
+
     // Check if username or email already exists
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
           { username: { equals: cleanUsername } },
-          { email: { equals: email.toLowerCase().trim() } },
+          { email: { equals: cleanEmail } },
         ],
       },
     });
@@ -70,18 +86,19 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await hashPassword(password);
-    const verificationToken = crypto.randomBytes(32).toString("hex");
+    // Generate 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     const user = await prisma.user.create({
       data: {
         username: cleanUsername,
-        email: email.toLowerCase().trim(),
+        email: cleanEmail,
         passwordHash,
         grade,
         avatarUrl: avatarUrl || null,
         role: "STUDENT",
         isVerified: false,
-        verificationToken,
+        verificationToken: verificationCode,
       },
       select: {
         id: true,
@@ -94,35 +111,15 @@ export async function POST(request: Request) {
       },
     });
 
-    // Create session token
-    const token = await createSessionToken({
-      userId: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      grade: user.grade,
-    });
-
-    const response = NextResponse.json(
+    return NextResponse.json(
       {
-        message: "Registration successful! Welcome to PadhoOrion.",
+        message: "Registration initiated! Please verify your email with the 6-digit verification code.",
         user,
-        verificationToken,
+        verificationCode,
+        requiresVerification: true,
       },
       { status: 201 }
     );
-
-    // Set HTTP-only session cookie
-    response.cookies.set({
-      name: COOKIE_NAME,
-      value: token,
-      httpOnly: true,
-      path: "/",
-      maxAge: 30 * 24 * 60 * 60,
-      sameSite: "lax",
-    });
-
-    return response;
   } catch (error: any) {
     console.error("Registration error:", error);
     return NextResponse.json(

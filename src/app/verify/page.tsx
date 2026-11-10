@@ -2,33 +2,51 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { CheckCircle, AlertCircle, ShieldCheck, ArrowRight } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { CheckCircle, AlertCircle, ShieldCheck, ArrowRight, RefreshCw } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 function VerifyContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const tokenParam = searchParams.get("token") || searchParams.get("code") || "";
+  const emailParam = searchParams.get("email") || "";
+
   const { user, refreshUser } = useAuth();
+  const router = useRouter();
+
+  const [emailInput, setEmailInput] = useState(emailParam || user?.email || "");
+  const [codeInput, setCodeInput] = useState(tokenParam);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">(
-    token ? "idle" : user?.isVerified ? "success" : "idle"
+    user?.isVerified ? "success" : "idle"
   );
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (token) {
-      handleVerify(token);
+    if (tokenParam && emailParam) {
+      handleVerify(tokenParam, emailParam);
     }
-  }, [token]);
+  }, [tokenParam, emailParam]);
 
-  const handleVerify = async (tok?: string) => {
+  const handleVerify = async (codeToUse?: string, emailToUse?: string) => {
+    const targetCode = (codeToUse || codeInput).trim();
+    const targetEmail = (emailToUse || emailInput).trim();
+
+    if (!targetCode) {
+      setStatus("error");
+      setMessage("Please enter your 6-digit verification code.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: tok }),
+        body: JSON.stringify({
+          code: targetCode,
+          email: targetEmail || undefined,
+        }),
       });
 
       const data = await res.json();
@@ -37,13 +55,46 @@ function VerifyContent() {
       }
 
       setStatus("success");
-      setMessage(data.message);
+      setMessage(data.message || "Email verified successfully!");
       await refreshUser();
     } catch (err: any) {
       setStatus("error");
       setMessage(err.message || "Failed to verify email.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!emailInput.trim()) {
+      setMessage("Please enter your account email to resend code.");
+      setStatus("error");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "resend",
+          email: emailInput.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        if (data.verificationCode) {
+          setCodeInput(data.verificationCode);
+        }
+        setMessage(data.message);
+        setStatus("idle");
+      } else {
+        setMessage(data.error || "Failed to resend");
+        setStatus("error");
+      }
+    } catch (e: any) {
+      setMessage(e.message || "Error resending code");
+      setStatus("error");
     }
   };
 
@@ -74,36 +125,67 @@ function VerifyContent() {
               href="/"
               className="inline-flex items-center gap-1.5 py-2 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
             >
-              <span>Back to Dashboard</span>
+              <span>Go to PadhoOrion Home</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-        ) : status === "error" ? (
-          <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm space-y-3 mb-6">
-            <div className="flex items-center justify-center gap-2 font-bold">
-              <AlertCircle className="w-5 h-5" />
-              <span>Verification Error</span>
-            </div>
-            <p className="text-xs">{message}</p>
-            <button
-              onClick={() => handleVerify()}
-              className="py-1.5 px-4 bg-rose-600 text-white rounded-lg text-xs font-bold"
-            >
-              Try Again
-            </button>
-          </div>
         ) : (
-          <div className="space-y-4">
-            <p className="text-sm text-slate-700 font-medium">
-              Click the button below to verify your current account email.
-            </p>
+          <div className="space-y-4 text-left">
+            {status === "error" && message && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{message}</span>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+                Account Email
+              </label>
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="student@padhoorion.edu"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 text-center">
+                6-Digit Verification Code
+              </label>
+              <input
+                type="text"
+                maxLength={6}
+                value={codeInput}
+                onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, ""))}
+                placeholder="000000"
+                className="w-full text-center tracking-[0.4em] font-mono text-xl py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-bold"
+              />
+            </div>
+
             <button
               onClick={() => handleVerify()}
-              disabled={loading}
-              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-xs shadow-indigo-500/20 transition-all flex items-center justify-center gap-2"
+              disabled={loading || codeInput.length < 6}
+              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {loading ? "Verifying..." : "Confirm & Verify Email"}
+              {loading ? "Verifying..." : "Verify & Activate Account"}
             </button>
+
+            <div className="flex items-center justify-between pt-1 text-[11px]">
+              <button
+                type="button"
+                onClick={handleResend}
+                className="text-indigo-600 hover:underline font-semibold flex items-center gap-1"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>Resend 6-Digit Code</span>
+              </button>
+              <Link href="/login" className="text-slate-500 hover:text-slate-700 font-medium">
+                Back to Login
+              </Link>
+            </div>
           </div>
         )}
       </div>

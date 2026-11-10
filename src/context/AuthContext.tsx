@@ -14,6 +14,9 @@ export interface User {
   isVerified: boolean;
   unreadNotificationsCount?: number;
   impersonatedBy?: string | null;
+  banReason?: string | null;
+  warningCount?: number;
+  lastWarningReason?: string | null;
 }
 
 interface AuthContextType {

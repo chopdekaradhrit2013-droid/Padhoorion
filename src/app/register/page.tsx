@@ -3,20 +3,39 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, User, Mail, GraduationCap, Image, AlertCircle, CheckCircle } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  User,
+  Mail,
+  GraduationCap,
+  Image,
+  AlertCircle,
+  CheckCircle,
+  ShieldCheck,
+  ArrowRight,
+  RefreshCw,
+} from "lucide-react";
 import { GRADES, GradeType } from "@/lib/constants";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
 
 export default function RegisterPage() {
+  const [step, setStep] = useState<"form" | "verify">("form");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [grade, setGrade] = useState<GradeType>("7th Grade");
+  const [grade, setGrade] = useState<GradeType>("8th Grade");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Verification step state
+  const [verificationCodeInput, setVerificationCodeInput] = useState("");
+  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
@@ -28,6 +47,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccessNotice(null);
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
@@ -54,17 +74,76 @@ export default function RegisterPage() {
         throw new Error(data.error || "Failed to register");
       }
 
-      setSuccessNotice("Account created! An email verification link has been issued.");
+      // Transition to Email Verification Step
+      setGeneratedCode(data.verificationCode || null);
+      if (data.verificationCode) {
+        setVerificationCodeInput(data.verificationCode);
+      }
+      setStep("verify");
+      setSuccessNotice("Registration initiated! Please verify your email with the 6-digit code below.");
+    } catch (err: any) {
+      setError(err.message || "Failed to register");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccessNotice(null);
+
+    try {
+      const res = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.toLowerCase().trim(),
+          code: verificationCodeInput.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Verification failed");
+      }
+
+      setSuccessNotice("Email verified successfully! Welcome to PadhoOrion.");
       await refreshUser();
 
       setTimeout(() => {
         router.push("/");
         router.refresh();
-      }, 1200);
+      }, 1000);
     } catch (err: any) {
-      setError(err.message || "Failed to register");
+      setError(err.message || "Failed to verify code");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "resend",
+          email: email.toLowerCase().trim(),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.verificationCode) {
+        setGeneratedCode(data.verificationCode);
+        setVerificationCodeInput(data.verificationCode);
+        setSuccessNotice(`New verification code issued: ${data.verificationCode}`);
+      } else {
+        setError(data.error || "Failed to resend code");
+      }
+    } catch (e: any) {
+      setError(e.message || "Error resending code");
     }
   };
 
@@ -78,10 +157,12 @@ export default function RegisterPage() {
             className="w-16 h-16 rounded-2xl object-contain mx-auto mb-3 shadow-sm border border-slate-200"
           />
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            Join PadhoOrion Community
+            {step === "verify" ? "Verify Student Email" : "Join PadhoOrion Community"}
           </h1>
           <p className="text-xs text-slate-500 mt-1 font-sans">
-            Create your student account to share and download school resources.
+            {step === "verify"
+              ? "Confirm your email address to activate your account and start collaborating."
+              : "Create your student account to share and download school resources."}
           </p>
         </div>
 
@@ -99,165 +180,235 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <form onSubmit={handleRegister} className="space-y-4">
-          {/* Username */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-              Username *
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. Name"
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
-              />
-              <User className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+        {/* STEP 2: VERIFICATION CODE FORM */}
+        {step === "verify" ? (
+          <div className="space-y-5">
+            <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-center space-y-2">
+              <div className="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center mx-auto shadow-sm">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <p className="text-xs text-slate-600 font-medium">
+                We issued a 6-digit verification code for:
+              </p>
+              <p className="text-sm font-bold text-indigo-950 font-mono">{email}</p>
+              {generatedCode && (
+                <div className="mt-2 py-2 px-3 bg-white border border-indigo-200 rounded-lg inline-block">
+                  <span className="text-[11px] text-slate-500 font-bold block uppercase tracking-wider">
+                    Your Verification Code
+                  </span>
+                  <span className="text-lg font-black tracking-widest text-indigo-700 font-mono">
+                    {generatedCode}
+                  </span>
+                </div>
+              )}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              Your identity everywhere: e.g. {username || "Username"} [{grade}]
-            </p>
-          </div>
 
-          {/* Email */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-              Email Address *
-            </label>
-            <div className="relative">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="student@padhoorion.edu"
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
-              />
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
-            </div>
-          </div>
+            <form onSubmit={handleVerifyCode} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 text-center">
+                  Enter 6-Digit Code *
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  required
+                  value={verificationCodeInput}
+                  onChange={(e) => setVerificationCodeInput(e.target.value.replace(/\D/g, ""))}
+                  placeholder="000000"
+                  className="w-full text-center tracking-[0.5em] font-mono text-2xl py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all font-bold"
+                />
+              </div>
 
-          {/* Mandatory Grade Selection */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-              Academic Grade * (Mandatory)
-            </label>
-            <div className="relative">
-              <select
-                value={grade}
-                onChange={(e) => setGrade(e.target.value as GradeType)}
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
+              <button
+                type="submit"
+                disabled={loading || verificationCodeInput.length < 6}
+                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {GRADES.map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </select>
-              <GraduationCap className="w-4 h-4 text-indigo-500 absolute left-3 top-3 pointer-events-none" />
-            </div>
-            <p className="text-[11px] text-indigo-600 font-medium mt-1">
-              * Note: You can freely view, comment, and upload to all grades regardless of this selection.
-            </p>
-          </div>
+                {loading ? "Activating Account..." : "Verify & Activate Account"}
+                <ArrowRight className="w-4 h-4" />
+              </button>
 
-          {/* Passwords */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex items-center justify-between pt-2 text-xs">
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  className="text-indigo-600 hover:underline font-semibold flex items-center gap-1"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Resend Code</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep("form")}
+                  className="text-slate-500 hover:text-slate-700 font-medium"
+                >
+                  Edit Account Details
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : (
+          /* STEP 1: REGISTRATION DETAILS FORM */
+          <form onSubmit={handleRegister} className="space-y-4">
+            {/* Username */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                Password *
+                Username *
               </label>
               <div className="relative">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type="text"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 6 chars"
-                  className="w-full pl-9 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
-                />
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="p-1 text-slate-400 hover:text-slate-700 absolute right-2.5 top-2.5"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                Confirm Password *
-              </label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat password"
-                  className="w-full pl-9 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
-                />
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="p-1 text-slate-400 hover:text-slate-700 absolute right-2.5 top-2.5"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Profile Picture (Optional) */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-              Profile Picture URL (Optional)
-            </label>
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1">
-                <input
-                  type="url"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  placeholder="https://... (or leave blank for initial avatar)"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="e.g. Name"
                   className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
                 />
-                <Image className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+                <User className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
               </div>
-              <div className="shrink-0 flex items-center gap-1.5">
-                <UserAvatar
-                  name={username || "User"}
-                  avatarUrl={avatarUrl.trim() || undefined}
-                  size="md"
+              <p className="text-[11px] text-slate-400 mt-1">
+                Your identity everywhere: e.g. {username || "Username"} [{grade}]
+              </p>
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                Email Address *
+              </label>
+              <div className="relative">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="student@padhoorion.edu"
+                  className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
                 />
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
               </div>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              If blank, a vibrant initial avatar will be automatically created.
-            </p>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
-          >
-            {loading ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Creating Account...
-              </>
-            ) : (
-              "Complete Registration"
-            )}
-          </button>
-        </form>
+            {/* Mandatory Grade Selection */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                Academic Grade * (Mandatory)
+              </label>
+              <div className="relative">
+                <select
+                  value={grade}
+                  onChange={(e) => setGrade(e.target.value as GradeType)}
+                  className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
+                >
+                  {GRADES.map((g) => (
+                    <option key={g} value={g}>
+                      {g}
+                    </option>
+                  ))}
+                </select>
+                <GraduationCap className="w-4 h-4 text-indigo-500 absolute left-3 top-3 pointer-events-none" />
+              </div>
+              <p className="text-[11px] text-indigo-600 font-medium mt-1">
+                * Note: You can freely view, comment, and upload to all grades regardless of this selection.
+              </p>
+            </div>
+
+            {/* Passwords */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                  Password *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="At least 6 chars"
+                    className="w-full pl-9 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
+                  />
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="p-1 text-slate-400 hover:text-slate-700 absolute right-2.5 top-2.5"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                  Confirm Password *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat password"
+                    className="w-full pl-9 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
+                  />
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="p-1 text-slate-400 hover:text-slate-700 absolute right-2.5 top-2.5"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Profile Picture (Optional) */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                Profile Picture URL (Optional)
+              </label>
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1">
+                  <input
+                    type="url"
+                    value={avatarUrl}
+                    onChange={(e) => setAvatarUrl(e.target.value)}
+                    placeholder="https://... (or leave blank for initial avatar)"
+                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
+                  />
+                  <Image className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+                </div>
+                <div className="shrink-0 flex items-center gap-1.5">
+                  <UserAvatar
+                    name={username || "User"}
+                    avatarUrl={avatarUrl.trim() || undefined}
+                    size="md"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">
+                If blank, a vibrant initial avatar will be automatically created.
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
+            >
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                "Continue to Verification"
+              )}
+            </button>
+          </form>
+        )}
 
         <div className="mt-6 text-center text-xs text-slate-500 font-medium">
           Already have an account?{" "}

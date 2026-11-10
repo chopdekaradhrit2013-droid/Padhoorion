@@ -33,8 +33,13 @@ export async function POST(request: Request) {
     }
 
     if (user.isBanned) {
+      const reasonText = user.banReason ? ` Reason: "${user.banReason}".` : "";
       return NextResponse.json(
-        { error: "This account has been suspended by an administrator for policy violations." },
+        {
+          error: `Your account has been suspended by an administrator.${reasonText}`,
+          banned: true,
+          banReason: user.banReason,
+        },
         { status: 403 }
       );
     }
@@ -44,6 +49,17 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Invalid username/email or password." },
         { status: 401 }
+      );
+    }
+
+    if (!user.isVerified && user.role !== "ADMIN") {
+      return NextResponse.json(
+        {
+          error: "Your email address has not been verified yet. Please enter your 6-digit verification code to activate your account.",
+          requiresVerification: true,
+          email: user.email,
+        },
+        { status: 403 }
       );
     }
 
@@ -65,6 +81,8 @@ export async function POST(request: Request) {
         role: user.role,
         avatarUrl: user.avatarUrl,
         isVerified: user.isVerified,
+        isBanned: user.isBanned,
+        warningCount: user.warningCount,
       },
     });
 

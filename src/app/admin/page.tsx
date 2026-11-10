@@ -58,6 +58,18 @@ export default function AdminDashboardPage() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSuccessMsg, setResetSuccessMsg] = useState<string | null>(null);
 
+  // Moderation Modals State (Warn, Ban, Unban)
+  const [warnModalUser, setWarnModalUser] = useState<any | null>(null);
+  const [warnReasonInput, setWarnReasonInput] = useState("");
+  const [warnSubmitting, setWarnSubmitting] = useState(false);
+
+  const [banModalUser, setBanModalUser] = useState<any | null>(null);
+  const [banReasonInput, setBanReasonInput] = useState("");
+  const [banSubmitting, setBanSubmitting] = useState(false);
+
+  const [unbanModalUser, setUnbanModalUser] = useState<any | null>(null);
+  const [unbanSubmitting, setUnbanSubmitting] = useState(false);
+
   useEffect(() => {
     if (user && user.role !== "ADMIN") {
       router.push("/");
@@ -127,24 +139,113 @@ export default function AdminDashboardPage() {
     }
   }, [user, activeTab]);
 
-  const handleToggleBan = async (targetUserId: string, currentBanned: boolean) => {
+  const handleWarnSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!warnModalUser) return;
+    const cleanReason = warnReasonInput.trim();
+    if (!cleanReason) {
+      alert("Please provide a reason for the warning.");
+      return;
+    }
+
+    setWarnSubmitting(true);
     try {
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetUserId, ban: !currentBanned }),
+        body: JSON.stringify({
+          targetUserId: warnModalUser.id,
+          action: "warn",
+          reason: cleanReason,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
         setFeedbackMessage(data.message);
+        setWarnModalUser(null);
+        setWarnReasonInput("");
         await fetchUsers();
         await fetchStats();
-        setTimeout(() => setFeedbackMessage(null), 3000);
+        setTimeout(() => setFeedbackMessage(null), 4000);
       } else {
-        alert(data.error);
+        alert(data.error || "Failed to issue warning.");
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
+      alert("Network error issuing warning.");
+    } finally {
+      setWarnSubmitting(false);
+    }
+  };
+
+  const handleBanSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!banModalUser) return;
+    const cleanReason = banReasonInput.trim();
+    if (!cleanReason) {
+      alert("Please provide a reason for the ban.");
+      return;
+    }
+
+    setBanSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetUserId: banModalUser.id,
+          action: "ban",
+          reason: cleanReason,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFeedbackMessage(data.message);
+        setBanModalUser(null);
+        setBanReasonInput("");
+        await fetchUsers();
+        await fetchStats();
+        setTimeout(() => setFeedbackMessage(null), 4000);
+      } else {
+        alert(data.error || "Failed to ban user.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error executing ban.");
+    } finally {
+      setBanSubmitting(false);
+    }
+  };
+
+  const handleUnbanSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!unbanModalUser) return;
+
+    setUnbanSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetUserId: unbanModalUser.id,
+          action: "unban",
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFeedbackMessage(data.message);
+        setUnbanModalUser(null);
+        await fetchUsers();
+        await fetchStats();
+        setTimeout(() => setFeedbackMessage(null), 4000);
+      } else {
+        alert(data.error || "Failed to unban user.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error unbanning user.");
+    } finally {
+      setUnbanSubmitting(false);
     }
   };
 
@@ -479,12 +580,29 @@ export default function AdminDashboardPage() {
                     <td className="p-3 text-slate-900 font-semibold">{u._count?.resources ?? 0}</td>
                     <td className="p-3">
                       {u.isBanned ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
-                          BANNED
-                        </span>
+                        <div className="space-y-0.5">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300">
+                            <XCircle className="w-3 h-3 text-rose-600" />
+                            BANNED
+                          </span>
+                          <p className="text-[10px] text-rose-600 font-medium truncate max-w-[160px]" title={u.banReason || "Policy violation"}>
+                            Reason: {u.banReason || "Policy violation"}
+                          </p>
+                        </div>
+                      ) : (u.warningCount || 0) > 0 ? (
+                        <div className="space-y-0.5">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
+                            <AlertTriangle className="w-3 h-3 text-amber-700" />
+                            WARN {u.warningCount}/3
+                          </span>
+                          <p className="text-[10px] text-amber-800 font-medium truncate max-w-[160px]" title={u.lastWarningReason || "Warning issued"}>
+                            {3 - u.warningCount} left: &ldquo;{u.lastWarningReason}&rdquo;
+                          </p>
+                        </div>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          ACTIVE
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <CheckCircle className="w-3 h-3 text-emerald-600" />
+                          ACTIVE (0/3)
                         </span>
                       )}
                     </td>
@@ -515,16 +633,42 @@ export default function AdminDashboardPage() {
                               <span>Set Password</span>
                             </button>
 
-                            <button
-                              onClick={() => handleToggleBan(u.id, u.isBanned)}
-                              className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all shadow-2xs ${
-                                u.isBanned
-                                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                                  : "bg-rose-600 text-white hover:bg-rose-700"
-                              }`}
-                            >
-                              {u.isBanned ? "Unban" : "Ban"}
-                            </button>
+                            {!u.isBanned ? (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setWarnModalUser(u);
+                                    setWarnReasonInput("");
+                                  }}
+                                  title={`Issue warning to ${u.username} (${u.warningCount || 0}/3)`}
+                                  className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
+                                >
+                                  <AlertTriangle className="w-3 h-3 text-amber-700" />
+                                  <span>Warn</span>
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    setBanModalUser(u);
+                                    setBanReasonInput("");
+                                  }}
+                                  title={`Permanently ban ${u.username}`}
+                                  className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
+                                >
+                                  <ShieldAlert className="w-3 h-3" />
+                                  <span>Ban</span>
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => setUnbanModalUser(u)}
+                                title={`Restore access for ${u.username}`}
+                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
+                              >
+                                <CheckCircle className="w-3 h-3" />
+                                <span>Unban</span>
+                              </button>
+                            )}
                           </>
                         )}
                       </div>
@@ -877,6 +1021,263 @@ export default function AdminDashboardPage() {
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Short Form Modal: Issue Official Warning */}
+      {warnModalUser && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#faf9f5] border border-[#e9e6dc] rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-scale-up">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-amber-100 text-amber-800 rounded-xl">
+                  <AlertTriangle className="w-5 h-5 text-amber-700" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-[#3d3929]">
+                    Issue Official Warning
+                  </h3>
+                  <p className="text-xs text-[#706d63]">
+                    Target: {warnModalUser.username} [{warnModalUser.grade}] &bull; {warnModalUser.email}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setWarnModalUser(null)}
+                className="text-stone-400 hover:text-stone-700 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Strike status indicator */}
+            <div className={`p-3 rounded-xl border text-xs leading-relaxed ${
+              (warnModalUser.warningCount || 0) >= 2
+                ? "bg-rose-50 border-rose-200 text-rose-900 font-bold"
+                : "bg-amber-50 border-amber-200 text-amber-900"
+            }`}>
+              {(warnModalUser.warningCount || 0) === 0 ? (
+                <span>
+                  <strong>Strike 1 of 3:</strong> The student will have 2 chances remaining before being banned.
+                </span>
+              ) : (warnModalUser.warningCount || 0) === 1 ? (
+                <span>
+                  <strong>Strike 2 of 3:</strong> The student will have only 1 chance remaining before an automatic permanent ban.
+                </span>
+              ) : (
+                <span>
+                  ⚠️ <strong>STRIKE 3 of 3 (FINAL STRIKE):</strong> Submitting this warning will <strong>AUTOMATICALLY PERMANENTLY BAN</strong> this student and blacklist their email address from ever registering again!
+                </span>
+              )}
+            </div>
+
+            <form onSubmit={handleWarnSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#3d3929] mb-1">
+                  Reason for Warning * (Displayed to Student)
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={warnReasonInput}
+                  onChange={(e) => setWarnReasonInput(e.target.value)}
+                  placeholder="e.g. Inappropriate language in comment section, spamming invalid notes..."
+                  className="w-full px-3 py-2 bg-white border border-[#dad9d4] rounded-xl text-xs text-[#3d3929] focus:outline-none focus:ring-2 focus:ring-[#c96442]"
+                />
+              </div>
+
+              {/* Quick Presets */}
+              <div>
+                <span className="text-[10px] uppercase font-bold text-stone-500 block mb-1">
+                  Quick Reason Presets:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    "Inappropriate language in comments",
+                    "Spamming duplicate or low quality files",
+                    "Disrespectful behavior towards classmates",
+                    "Academic dishonesty / plagiarism",
+                  ].map((preset) => (
+                    <button
+                      type="button"
+                      key={preset}
+                      onClick={() => setWarnReasonInput(preset)}
+                      className="px-2 py-0.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[10px] rounded-md font-medium transition-colors"
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-200">
+                <button
+                  type="button"
+                  onClick={() => setWarnModalUser(null)}
+                  className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={warnSubmitting || !warnReasonInput.trim()}
+                  className={`px-4 py-2 text-white rounded-xl text-xs font-bold shadow-xs disabled:opacity-50 ${
+                    (warnModalUser.warningCount || 0) >= 2
+                      ? "bg-rose-600 hover:bg-rose-700"
+                      : "bg-amber-600 hover:bg-amber-700"
+                  }`}
+                >
+                  {warnSubmitting
+                    ? "Submitting..."
+                    : (warnModalUser.warningCount || 0) >= 2
+                    ? "Confirm Strike 3 & Auto-Ban"
+                    : "Issue Official Warning"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Short Form Modal: Permanent Ban */}
+      {banModalUser && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#faf9f5] border border-[#e9e6dc] rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-scale-up">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-rose-100 text-rose-800 rounded-xl">
+                  <ShieldAlert className="w-5 h-5 text-rose-700" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-[#3d3929]">
+                    Permanently Ban Student
+                  </h3>
+                  <p className="text-xs text-[#706d63]">
+                    Target: {banModalUser.username} [{banModalUser.grade}] &bull; {banModalUser.email}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setBanModalUser(null)}
+                className="text-stone-400 hover:text-stone-700 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 leading-relaxed font-semibold">
+              ⚠️ Permanent Action: Banning will immediately revoke all active sessions and permanently block <span className="underline decoration-rose-400 font-mono">{banModalUser.email}</span> so this email address can NEVER be used to register an account on PadhoOrion again.
+            </div>
+
+            <form onSubmit={handleBanSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#3d3929] mb-1">
+                  Reason for Permanent Ban * (Displayed to User on Login)
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={banReasonInput}
+                  onChange={(e) => setBanReasonInput(e.target.value)}
+                  placeholder="e.g. Severe violation of school community safety guidelines, harassment..."
+                  className="w-full px-3 py-2 bg-white border border-[#dad9d4] rounded-xl text-xs text-[#3d3929] focus:outline-none focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              {/* Quick Presets */}
+              <div>
+                <span className="text-[10px] uppercase font-bold text-stone-500 block mb-1">
+                  Quick Reason Presets:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    "Severe violation of community guidelines",
+                    "Classmate harassment / abusive behavior",
+                    "Malicious spam or harmful content upload",
+                    "Fake student account / identity fraud",
+                  ].map((preset) => (
+                    <button
+                      type="button"
+                      key={preset}
+                      onClick={() => setBanReasonInput(preset)}
+                      className="px-2 py-0.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-[10px] rounded-md font-medium transition-colors"
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-200">
+                <button
+                  type="button"
+                  onClick={() => setBanModalUser(null)}
+                  className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={banSubmitting || !banReasonInput.trim()}
+                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-xs disabled:opacity-50"
+                >
+                  {banSubmitting ? "Executing Ban..." : "Confirm Permanent Ban & Block Email"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Unban Confirmation */}
+      {unbanModalUser && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#faf9f5] border border-[#e9e6dc] rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-scale-up">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-emerald-100 text-emerald-800 rounded-xl">
+                  <CheckCircle className="w-5 h-5 text-emerald-700" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-[#3d3929]">
+                    Unban Student Account
+                  </h3>
+                  <p className="text-xs text-[#706d63]">
+                    Target: {unbanModalUser.username} [{unbanModalUser.grade}] &bull; {unbanModalUser.email}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setUnbanModalUser(null)}
+                className="text-stone-400 hover:text-stone-700 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 leading-relaxed">
+              Unbanning will restore full login access for <strong>{unbanModalUser.username}</strong>, reset their warning count back to <strong>0 of 3</strong>, and remove <strong>{unbanModalUser.email}</strong> from the banned email registry.
+            </div>
+
+            <form onSubmit={handleUnbanSubmit} className="space-y-4">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-200">
+                <button
+                  type="button"
+                  onClick={() => setUnbanModalUser(null)}
+                  className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={unbanSubmitting}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs disabled:opacity-50"
+                >
+                  {unbanSubmitting ? "Restoring Account..." : "Confirm Unban & Reset"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

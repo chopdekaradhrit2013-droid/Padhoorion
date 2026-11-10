@@ -21,6 +21,11 @@ model User {
   resetPasswordToken  String?
   resetPasswordExpiry DateTime?
   isBanned            Boolean        @default(false)
+  banReason           String?
+  bannedAt            DateTime?
+  warningCount        Int            @default(0)
+  lastWarningReason   String?
+  lastWarningAt       DateTime?
   bio                 String?
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
@@ -161,5 +166,12 @@ model Activity {
   createdAt   DateTime @default(now())
 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BannedEmail {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  reason    String?
+  bannedAt  DateTime @default(now())
 }
 

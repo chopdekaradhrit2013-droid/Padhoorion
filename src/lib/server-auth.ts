@@ -23,6 +23,10 @@ export async function getAuthUserFromRequest() {
         avatarUrl: true,
         isVerified: true,
         isBanned: true,
+        banReason: true,
+        warningCount: true,
+        lastWarningReason: true,
+        lastWarningAt: true,
         bio: true,
       },
     });

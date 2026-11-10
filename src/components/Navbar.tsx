@@ -11,6 +11,7 @@ import {
   User as UserIcon,
   LogOut,
   ShieldAlert,
+  AlertTriangle,
   Menu,
   X,
   Compass,
@@ -66,6 +67,27 @@ export function Navbar() {
             <span>Exit to Admin Console</span>
             <span aria-hidden="true">&rarr;</span>
           </button>
+        </div>
+      )}
+
+      {user && (user.warningCount || 0) > 0 && !user.isBanned && (
+        <div className="bg-amber-500 text-amber-950 px-4 py-2 text-xs font-bold flex flex-wrap items-center justify-between gap-2 sticky top-0 z-50 shadow-md border-b border-amber-600">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-950 shrink-0" />
+            <span>
+              ⚠️ OFFICIAL WARNING ({user.warningCount}/3): &ldquo;{user.lastWarningReason || "Violation of guidelines"}&rdquo; &mdash; You have{" "}
+              <span className="underline decoration-amber-950 underline-offset-2">
+                {3 - (user.warningCount || 0)} chance{3 - (user.warningCount || 0) === 1 ? "" : "s"}
+              </span>{" "}
+              remaining before an automatic permanent ban.
+            </span>
+          </div>
+          <Link
+            href="/notifications"
+            className="px-2.5 py-1 bg-amber-950 hover:bg-black text-amber-100 text-[11px] font-bold rounded-lg transition-colors shrink-0"
+          >
+            View Warning & Notifications &rarr;
+          </Link>
         </div>
       )}
       <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs">
