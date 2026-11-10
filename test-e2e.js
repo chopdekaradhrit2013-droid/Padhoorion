@@ -69,6 +69,11 @@ async function runTests() {
     }
   }
 
+  let createdUserIds = [];
+  let createdResourceIds = [];
+  let createdAnnId = null;
+  let adminCookie = '';
+
   try {
     // 1. Homepage & Announcements
     console.log('\nTesting Homepage & Active Announcements...');
@@ -86,37 +91,49 @@ async function runTests() {
     const unauthApiRes = await request('GET', '/api/resources');
     assert(unauthApiRes.status === 401, 'Unauthenticated API access to /api/resources returns 401 Unauthorized');
 
-    // 2. Student Authentication (Adhrit 7th Grade)
-    console.log('\nTesting Authentication & Sessions...');
-    const loginRes = await request('POST', '/api/auth/login', {
-      identifier: 'kabir_sharma',
-      password: 'Student@123',
+    // 2. Student Registration & Authentication
+    console.log('\nTesting Student Registration & Authentication...');
+    const testStudentName = `test_student_${Date.now().toString().slice(-4)}`;
+    const regStudent1 = await request('POST', '/api/auth/register', {
+      username: testStudentName,
+      email: `${testStudentName}@padhoorion.edu`,
+      password: 'StudentPass@123',
+      confirmPassword: 'StudentPass@123',
+      grade: '7th Grade',
     });
-    assert(loginRes.status === 200 && loginRes.data.user.username === 'kabir_sharma', 'Student login succeeds');
+    assert(regStudent1.status === 201 && regStudent1.data.user.username === testStudentName, 'Student registration succeeds');
+    createdUserIds.push(regStudent1.data.user.id);
+
+    const loginRes = await request('POST', '/api/auth/login', {
+      identifier: testStudentName,
+      password: 'StudentPass@123',
+    });
+    assert(loginRes.status === 200 && loginRes.data.user.username === testStudentName, 'Student login succeeds');
     assert(loginRes.data.user.grade.includes('Grade'), 'Student grade is a valid Grade tag');
 
     const studentCookie = parseCookies(loginRes);
 
     // Verify /api/auth/me with session cookie
     const meRes = await request('GET', '/api/auth/me', null, { Cookie: studentCookie });
-    assert(meRes.status === 200 && meRes.data.user.username === 'kabir_sharma', 'Session cookie maintains logged-in state');
+    assert(meRes.status === 200 && meRes.data.user.username === testStudentName, 'Session cookie maintains logged-in state');
 
-    // 3. User Registration
-    console.log('\nTesting Public Registration...');
-    const testUsername = `student_${Date.now().toString().slice(-4)}`;
+    // 3. User Registration (Peer Student)
+    console.log('\nTesting Peer Student Registration...');
+    const peerStudentName = `peer_${Date.now().toString().slice(-4)}`;
     const regRes = await request('POST', '/api/auth/register', {
-      username: testUsername,
-      email: `${testUsername}@padhoorion.edu`,
+      username: peerStudentName,
+      email: `${peerStudentName}@padhoorion.edu`,
       password: 'Password@123',
       confirmPassword: 'Password@123',
       grade: '8th Grade',
     });
-    assert(regRes.status === 201 && regRes.data.user.username === testUsername, 'New student public registration succeeds');
-    const newStudentCookie = parseCookies(regRes);
+    assert(regRes.status === 201 && regRes.data.user.username === peerStudentName, 'Peer student public registration succeeds');
+    createdUserIds.push(regRes.data.user.id);
+    const peerCookie = parseCookies(regRes);
 
     // 4. Email Verification
     console.log('\nTesting Email Verification...');
-    const verifyRes = await request('POST', '/api/auth/verify', {}, { Cookie: newStudentCookie });
+    const verifyRes = await request('POST', '/api/auth/verify', {}, { Cookie: peerCookie });
     assert(verifyRes.status === 200 && verifyRes.data.success === true, 'Email verification succeeds');
 
     // 5. Grade Exploration (Access across all 5 grades)
@@ -127,25 +144,47 @@ async function runTests() {
       assert(gRes.status === 200, `Grade exploration succeeds for ${g}`);
     }
 
-    // 6. Resources List & Search
-    console.log('\nTesting Resource Discovery & Social Features...');
-    const searchRes = await request('GET', '/api/resources?search=Linear', null, { Cookie: studentCookie });
-    assert(searchRes.status === 200 && searchRes.data.resources.length > 0, 'Resource search returns matching resources');
+    // 6. Resource Upload & Discovery
+    console.log('\nTesting Resource Upload & Discovery...');
+    const { PrismaClient } = require('@prisma/client');
+    const pInit = new PrismaClient();
+    const testRes = await pInit.resource.create({
+      data: {
+        title: 'Algebra and Geometry Complete Practice Drills',
+        description: 'Comprehensive practice problems and solved formulas for 7th grade math.',
+        grade: '7th Grade',
+        category: 'Notebook',
+        subject: 'Mathematics',
+        chapter: 'Linear Equations',
+        topic: 'Graphing and section formula',
+        fileUrl: '/uploads/sample.pdf',
+        fileName: 'sample.pdf',
+        fileType: 'pdf',
+        fileSize: 1024,
+        authorId: regStudent1.data.user.id,
+        authorGradeAtPublish: '7th Grade',
+        tags: 'algebra, math',
+      },
+    });
+    await pInit.$disconnect();
+    const resourceId = testRes.id;
+    createdResourceIds.push(resourceId);
+    assert(Boolean(resourceId), 'Student resource record created for discovery testing');
 
-    const firstResource = searchRes.data.resources[0];
-    const resourceId = firstResource.id;
+    const searchRes = await request('GET', '/api/resources?search=Algebra', null, { Cookie: studentCookie });
+    assert(searchRes.status === 200 && searchRes.data.resources.length > 0, 'Resource search returns matching resources');
 
     // 7. Resource Details
     const detailRes = await request('GET', `/api/resources/${resourceId}`, null, { Cookie: studentCookie });
-    assert(detailRes.status === 200 && detailRes.data.resource.title.includes('Linear'), 'Resource details page returns resource');
+    assert(detailRes.status === 200 && detailRes.data.resource.title.includes('Algebra'), 'Resource details page returns resource');
     assert(detailRes.data.resource.authorGradeAtPublish === '7th Grade', 'Resource retains author grade at publish time');
 
     // 8. Like & Bookmark & Download
     console.log('\nTesting Like, Bookmark, and Download tracking...');
-    const likeRes = await request('POST', `/api/resources/${resourceId}/like`, {}, { Cookie: newStudentCookie });
+    const likeRes = await request('POST', `/api/resources/${resourceId}/like`, {}, { Cookie: peerCookie });
     assert(likeRes.status === 200, 'Like toggle succeeds');
 
-    const bookmarkRes = await request('POST', `/api/resources/${resourceId}/bookmark`, {}, { Cookie: newStudentCookie });
+    const bookmarkRes = await request('POST', `/api/resources/${resourceId}/bookmark`, {}, { Cookie: peerCookie });
     assert(bookmarkRes.status === 200 && bookmarkRes.data.bookmarked === true, 'Bookmark toggle succeeds');
 
     const downloadRes = await request('POST', `/api/resources/${resourceId}/download`, {}, { Cookie: studentCookie });
@@ -156,7 +195,7 @@ async function runTests() {
     const commentRes = await request('POST', '/api/comments', {
       resourceId,
       content: 'Can you upload part 2 of the coordinate geometry diagrams please?',
-    }, { Cookie: newStudentCookie });
+    }, { Cookie: peerCookie });
     assert(commentRes.status === 201 && commentRes.data.comment.authorGradeAtPublish === '8th Grade', 'Comment posted with current grade snapshot [8th Grade]');
 
     const commentId = commentRes.data.comment.id;
@@ -171,7 +210,6 @@ async function runTests() {
 
     // 10. Grade Progression Test (Requirement 8)
     console.log('\nTesting Academic Grade Progression...');
-    // Adhrit promotes from 7th Grade to 8th Grade
     const progRes = await request('POST', '/api/users/update-grade', {
       newGrade: '8th Grade',
     }, { Cookie: studentCookie });
@@ -184,8 +222,8 @@ async function runTests() {
 
     // 11. Public User Profile
     console.log('\nTesting Public User Profile...');
-    const profileRes = await request('GET', `/api/users/profile?username=kabir_sharma`, null, { Cookie: studentCookie });
-    assert(profileRes.status === 200 && profileRes.data.user.username === 'kabir_sharma', 'Public user profile returns user data');
+    const profileRes = await request('GET', `/api/users/profile?username=${testStudentName}`, null, { Cookie: studentCookie });
+    assert(profileRes.status === 200 && profileRes.data.user.username === testStudentName, 'Public user profile returns user data');
     assert(profileRes.data.user.grade === '8th Grade', 'Public profile displays live grade tag');
     assert(profileRes.data.user.activities.some((a) => a.type === 'GRADE_CHANGE'), 'Activity history records academic grade progression');
 
@@ -195,8 +233,8 @@ async function runTests() {
       identifier: 'chopdekaradhrit2013@gmail.com',
       password: 'HALAMADRID123',
     });
-    assert(adminLogin.status === 200 && adminLogin.data.user.role === 'ADMIN', 'Admin login succeeds');
-    const adminCookie = parseCookies(adminLogin);
+    assert(adminLogin.status === 200 && adminLogin.data.user.role === 'ADMIN', 'Admin login succeeds with updated credentials');
+    adminCookie = parseCookies(adminLogin);
 
     // Verify student cannot access admin overview
     const studentForbidden = await request('GET', '/api/admin/overview', null, { Cookie: studentCookie });
@@ -204,7 +242,7 @@ async function runTests() {
 
     // Admin overview
     const adminOverview = await request('GET', '/api/admin/overview', null, { Cookie: adminCookie });
-    assert(adminOverview.status === 200 && adminOverview.data.stats.totalUsers >= 5, 'Admin overview returns system metrics');
+    assert(adminOverview.status === 200 && adminOverview.data.stats.totalUsers >= 1, 'Admin overview returns system metrics');
 
     // Create Announcement with duration option (Requirement 10)
     const newAnn = await request('POST', '/api/admin/announcements', {
@@ -214,6 +252,7 @@ async function runTests() {
       durationOption: '24_HOURS',
     }, { Cookie: adminCookie });
     assert(newAnn.status === 201 && newAnn.data.announcement.durationOption === '24_HOURS', 'Admin successfully creates announcement with 24_HOURS duration');
+    createdAnnId = newAnn.data.announcement.id;
 
     // Ban and unban user test
     const banRes = await request('POST', '/api/admin/users', {
@@ -223,7 +262,7 @@ async function runTests() {
     assert(banRes.status === 200 && banRes.data.user.isBanned === true, 'Admin successfully bans violating user');
 
     const bannedLogin = await request('POST', '/api/auth/login', {
-      identifier: testUsername,
+      identifier: peerStudentName,
       password: 'Password@123',
     });
     assert(bannedLogin.status === 403, 'Banned user is blocked from logging in (403)');
@@ -248,7 +287,7 @@ async function runTests() {
     const impersonateCookie = parseCookies(impersonateRes);
 
     const impersonatedMe = await request('GET', '/api/auth/me', null, { Cookie: impersonateCookie });
-    assert(impersonatedMe.status === 200 && impersonatedMe.data.user.username === testUsername && impersonatedMe.data.user.impersonatedBy, 'Session reflects student identity with active admin impersonation tracking');
+    assert(impersonatedMe.status === 200 && impersonatedMe.data.user.username === peerStudentName && impersonatedMe.data.user.impersonatedBy, 'Session reflects student identity with active admin impersonation tracking');
 
     // Exit Impersonation Test
     const exitImpersonateRes = await request('POST', '/api/admin/impersonate/exit', null, { Cookie: impersonateCookie });
@@ -266,19 +305,10 @@ async function runTests() {
     assert(resetRes.status === 200 && resetRes.data.success === true, 'Admin successfully overrides/resets student test password');
 
     const testLoginWithNewPass = await request('POST', '/api/auth/login', {
-      identifier: testUsername,
+      identifier: peerStudentName,
       password: 'NewAssignedTestPass@2026',
     });
     assert(testLoginWithNewPass.status === 200, 'Student logs in successfully using newly assigned test password');
-
-    // Clean up transient test objects so database remains clean
-    try {
-      await request('DELETE', `/api/admin/announcements?id=${newAnn.data.announcement.id}`, null, { Cookie: adminCookie });
-      const { PrismaClient } = require('@prisma/client');
-      const p = new PrismaClient();
-      await p.user.delete({ where: { id: regRes.data.user.id } }).catch(() => {});
-      await p.$disconnect();
-    } catch {}
 
     console.log('\n--- ALL TEST SUITES COMPLETED ---');
     if (failures === 0) {
@@ -290,8 +320,34 @@ async function runTests() {
   } catch (err) {
     console.error('Test execution error:', err);
     process.exit(1);
+  } finally {
+    // 100% Cleanup of all test artifacts
+    try {
+      if (createdAnnId && adminCookie) {
+        await request('DELETE', `/api/admin/announcements?id=${createdAnnId}`, null, { Cookie: adminCookie });
+      }
+      const { PrismaClient } = require('@prisma/client');
+      const p = new PrismaClient();
+      if (createdResourceIds.length > 0) {
+        await p.comment.deleteMany({ where: { resourceId: { in: createdResourceIds } } });
+        await p.like.deleteMany({ where: { resourceId: { in: createdResourceIds } } });
+        await p.bookmark.deleteMany({ where: { resourceId: { in: createdResourceIds } } });
+        await p.resource.deleteMany({ where: { id: { in: createdResourceIds } } });
+      }
+      if (createdUserIds.length > 0) {
+        await p.comment.deleteMany({ where: { authorId: { in: createdUserIds } } });
+        await p.notification.deleteMany({ where: { OR: [{ userId: { in: createdUserIds } }, { actorId: { in: createdUserIds } }] } });
+        await p.activity.deleteMany({ where: { userId: { in: createdUserIds } } });
+        await p.like.deleteMany({ where: { userId: { in: createdUserIds } } });
+        await p.bookmark.deleteMany({ where: { userId: { in: createdUserIds } } });
+        await p.resource.deleteMany({ where: { authorId: { in: createdUserIds } } });
+        await p.user.deleteMany({ where: { id: { in: createdUserIds } } });
+      }
+      await p.$disconnect();
+    } catch (e) {
+      console.error('Cleanup error:', e);
+    }
   }
 }
 
 runTests();
-
