@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                  String         @id @default(uuid())
+  username            String         @unique
+  email               String         @unique
+  passwordHash        String
+  avatarUrl           String?
+  grade               String         // "6th Grade", "7th Grade", "8th Grade", "9th Grade", "10th Grade"
+  role                String         @default("STUDENT") // "STUDENT", "ADMIN"
+  isVerified          Boolean        @default(false)
+  verificationToken   String?
+  resetPasswordToken  String?
+  resetPasswordExpiry DateTime?
+  isBanned            Boolean        @default(false)
+  bio                 String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  resources           Resource[]
+  comments            Comment[]
+  likes               Like[]
+  bookmarks           Bookmark[]
+  notifications       Notification[] @relation("UserNotifications")
+  actionsDone         Notification[] @relation("ActorNotifications")
+  reports             Report[]
+  announcements       Announcement[]
+  activities          Activity[]
+}
+
+model Resource {
+  id                   String     @id @default(uuid())
+  title                String
+  description          String
+  grade                String     // "6th Grade", "7th Grade", "8th Grade", "9th Grade", "10th Grade"
+  category             String     // "Notebook", "Worksheet", "Handwritten Notes", "AI Notes", "Q&A"
+  subject              String     // "Mathematics", "Science", "Social Studies", "English", "Hindi", "Computer Science", etc.
+  chapter              String
+  topic                String
+  fileUrl              String
+  fileName             String
+  fileType             String     // "application/pdf", "image/png", "image/jpeg", etc.
+  fileSize             Int        // in bytes
+  tags                 String?    // comma-separated tags
+  authorId             String
+  authorGradeAtPublish String     // Snapshot of author grade at upload time
+  viewsCount           Int        @default(0)
+  downloadsCount       Int        @default(0)
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  author               User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments             Comment[]
+  likes                Like[]
+  bookmarks            Bookmark[]
+  reports              Report[]
+}
+
+model Comment {
+  id                   String     @id @default(uuid())
+  content              String
+  resourceId           String
+  authorId             String
+  authorGradeAtPublish String     // Snapshot of author grade at comment time
+  parentId             String?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  resource             Resource   @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  author               User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent               Comment?   @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies              Comment[]  @relation("CommentReplies")
+  reports              Report[]
+}
+
+model Like {
+  id         String   @id @default(uuid())
+  userId     String
+  resourceId String
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resourceId])
+}
+
+model Bookmark {
+  id         String   @id @default(uuid())
+  userId     String
+  resourceId String
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resourceId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  actorId   String?
+  type      String   // "COMMENT", "REPLY", "LIKE", "ANNOUNCEMENT", "ADMIN"
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  actor     User?    @relation("ActorNotifications", fields: [actorId], references: [id], onDelete: SetNull)
+}
+
+model Report {
+  id          String   @id @default(uuid())
+  reporterId  String
+  targetType  String   // "RESOURCE", "COMMENT"
+  resourceId  String?
+  commentId   String?
+  reason      String
+  details     String?
+  status      String   @default("PENDING") // "PENDING", "RESOLVED", "DISMISSED"
+  createdAt   DateTime @default(now())
+
+  reporter    User      @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  resource    Resource? @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  comment     Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+}
+
+model Announcement {
+  id             String    @id @default(uuid())
+  title          String
+  content        String
+  authorId       String
+  priority       String    @default("NORMAL") // "NORMAL", "HIGH", "URGENT"
+  durationOption String    // "1_HOUR", "12_HOURS", "24_HOURS", "7_DAYS", "30_DAYS", "FOREVER"
+  expiresAt      DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+
+  author         User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Activity {
+  id          String   @id @default(uuid())
+  userId      String
+  type        String   // "UPLOAD", "COMMENT", "REPLY", "LIKE", "BOOKMARK", "GRADE_CHANGE"
+  title       String
+  description String?
+  gradeAtTime String
+  targetId    String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+

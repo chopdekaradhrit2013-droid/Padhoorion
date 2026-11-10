@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+  <rect width="800" height="1000" fill="#f5f1e6" />
+  <rect x="40" y="40" width="720" height="920" rx="8" fill="#fffcf5" stroke="#dbd0ba" stroke-width="2" />
+  <!-- vintage lined paper effect -->
+  <line x1="80" y1="120" x2="720" y2="120" stroke="#dbd0ba" stroke-width="1.5" />
+  <line x1="80" y1="170" x2="720" y2="170" stroke="#dbd0ba" stroke-width="1" />
+  <line x1="80" y1="220" x2="720" y2="220" stroke="#dbd0ba" stroke-width="1" />
+  <line x1="80" y1="270" x2="720" y2="270" stroke="#dbd0ba" stroke-width="1" />
+  <line x1="80" y1="320" x2="720" y2="320" stroke="#dbd0ba" stroke-width="1" />
+  <line x1="80" y1="370" x2="720" y2="370" stroke="#dbd0ba" stroke-width="1" />
+  <line x1="80" y1="420" x2="720" y2="420" stroke="#dbd0ba" stroke-width="1" />
+  <line x1="80" y1="470" x2="720" y2="470" stroke="#dbd0ba" stroke-width="1" />
+  <line x1="80" y1="520" x2="720" y2="520" stroke="#dbd0ba" stroke-width="1" />
+  <line x1="80" y1="570" x2="720" y2="570" stroke="#dbd0ba" stroke-width="1" />
+  
+  <!-- Content -->
+  <text x="80" y="95" font-family="Georgia, serif" font-size="28" fill="#4a3f35" font-weight="bold">PadhoOrion Handwritten Notes</text>
+  <text x="80" y="155" font-family="system-ui, sans-serif" font-size="18" fill="#a67c52" font-weight="bold">Chapter: Linear Equations & Coordinate Geometry</text>
+  <text x="80" y="205" font-family="Georgia, serif" font-size="16" fill="#4a3f35">1. Standard form of a linear equation in two variables: ax + by + c = 0</text>
+  <text x="80" y="255" font-family="Georgia, serif" font-size="16" fill="#4a3f35">2. A linear equation has infinitely many solutions (ordered pairs).</text>
+  <text x="80" y="305" font-family="Georgia, serif" font-size="16" fill="#4a3f35">3. The graph of every linear equation in two variables is a straight line.</text>
+  <text x="80" y="355" font-family="Georgia, serif" font-size="16" fill="#4a3f35">4. Distance Formula: d = sqrt((x2 - x1)^2 + (y2 - y1)^2)</text>
+  <text x="80" y="405" font-family="Georgia, serif" font-size="16" fill="#4a3f35">5. Section Formula: ((m1*x2 + m2*x1)/(m1+m2), (m1*y2 + m2*y1)/(m1+m2))</text>
+  
+  <rect x="80" y="650" width="640" height="180" rx="6" fill="#ece5d8" stroke="#dbd0ba" />
+  <text x="110" y="700" font-family="system-ui, sans-serif" font-size="16" fill="#4a3f35" font-weight="bold">Important Teacher Remarks:</text>
+  <text x="110" y="740" font-family="Georgia, serif" font-size="15" fill="#7d6b56">Always label x-axis and y-axis with proper scaling in exam graph sheets.</text>
+  <text x="110" y="775" font-family="Georgia, serif" font-size="15" fill="#7d6b56">Double check negative signs when substituting into the distance formula.</text>
+  
+  <text x="80" y="910" font-family="system-ui, sans-serif" font-size="13" fill="#7d6b56">Uploaded to PadhoOrion by Adhrit [7th Grade] - Community Verified</text>
+</svg>

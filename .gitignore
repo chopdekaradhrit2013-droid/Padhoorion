@@ -1,17 +1,36 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-.venv/
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
 
-# Environment files with sensitive credentials
-.env
+# testing
+/coverage
 
-# Logs and development simulator output
-*.log
-simulated_emails.log
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
 .DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# SQLite temporary journal
+*.db-journal
