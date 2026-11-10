@@ -29,8 +29,17 @@ export default function AdminDashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "reports" | "announcements">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "reports" | "announcements" | "email">("overview");
   const [stats, setStats] = useState<any>(null);
+
+  // Email settings state
+  const [gmailConfigured, setGmailConfigured] = useState(false);
+  const [configuredGmailUser, setConfiguredGmailUser] = useState("");
+  const [gmailInput, setGmailInput] = useState("chopdekaradhrit2013@gmail.com");
+  const [appPasswordInput, setAppPasswordInput] = useState("");
+  const [emailTesting, setEmailTesting] = useState(false);
+  const [emailSettingsNotice, setEmailSettingsNotice] = useState<string | null>(null);
+  const [emailSettingsError, setEmailSettingsError] = useState<string | null>(null);
 
   // Users tab state
   const [usersList, setUsersList] = useState<any[]>([]);
@@ -130,12 +139,62 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const fetchEmailSettings = async () => {
+    try {
+      const res = await fetch("/api/admin/email-settings");
+      if (res.ok) {
+        const data = await res.json();
+        setGmailConfigured(Boolean(data.configured));
+        if (data.gmailUser) {
+          setConfiguredGmailUser(data.gmailUser);
+          setGmailInput(data.gmailUser);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveEmailSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailTesting(true);
+    setEmailSettingsNotice(null);
+    setEmailSettingsError(null);
+
+    try {
+      const res = await fetch("/api/admin/email-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gmailUser: gmailInput.trim(),
+          appPassword: appPasswordInput.trim(),
+          testRecipient: user?.email || gmailInput.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setGmailConfigured(true);
+        setConfiguredGmailUser(gmailInput.trim());
+        setAppPasswordInput("");
+        setEmailSettingsNotice(data.message);
+      } else {
+        setEmailSettingsError(data.error || "Failed to authenticate Gmail credentials.");
+      }
+    } catch (err: any) {
+      setEmailSettingsError(err.message || "Network error testing Gmail connection.");
+    } finally {
+      setEmailTesting(false);
+    }
+  };
+
   useEffect(() => {
     if (user?.role === "ADMIN") {
       fetchStats();
       if (activeTab === "users") fetchUsers();
       if (activeTab === "reports") fetchReports();
       if (activeTab === "announcements") fetchAnnouncements();
+      if (activeTab === "email") fetchEmailSettings();
     }
   }, [user, activeTab]);
 
@@ -482,6 +541,17 @@ export default function AdminDashboardPage() {
             }`}
           >
             School Announcements ({stats?.activeAnnouncementsCount || 0})
+          </button>
+
+          <button
+            onClick={() => setActiveTab("email")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === "email"
+                ? "bg-indigo-600 text-white shadow-xs"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+            }`}
+          >
+            Gmail Inbox Setup {gmailConfigured ? "✓" : "⚙️"}
           </button>
         </div>
       </div>
@@ -928,6 +998,122 @@ export default function AdminDashboardPage() {
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: GMAIL INBOX SETUP */}
+      {activeTab === "email" && (
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-xl p-6 sm:p-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="font-extrabold text-xl text-slate-900 tracking-tight flex items-center gap-2">
+                <span>Gmail Inbox Delivery Setup</span>
+                {gmailConfigured ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    ACTIVE ✓
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300">
+                    SETUP PENDING
+                  </span>
+                )}
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Deliver 6-digit registration codes and community warnings directly to students&apos; real Gmail inboxes.
+              </p>
+            </div>
+          </div>
+
+          {emailSettingsNotice && (
+            <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2 font-medium">
+              <CheckCircle className="w-5 h-5 shrink-0 text-emerald-600" />
+              <span>{emailSettingsNotice}</span>
+            </div>
+          )}
+
+          {emailSettingsError && (
+            <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl flex items-center gap-2 font-medium">
+              <AlertTriangle className="w-5 h-5 shrink-0 text-rose-600" />
+              <span>{emailSettingsError}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Form */}
+            <form onSubmit={handleSaveEmailSettings} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase text-slate-500 mb-1.5">
+                  Sender Gmail Address *
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={gmailInput}
+                  onChange={(e) => setGmailInput(e.target.value)}
+                  placeholder="chopdekaradhrit2013@gmail.com"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase text-slate-500 mb-1.5">
+                  Google 16-Character App Password *
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={appPasswordInput}
+                  onChange={(e) => setAppPasswordInput(e.target.value)}
+                  placeholder="abcd efgh ijkl mnop"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  16-character password generated from Google Account (spaces are ignored).
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={emailTesting || !gmailInput.trim() || !appPasswordInput.trim()}
+                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {emailTesting ? "Verifying & Sending Test Email..." : "Test Connection & Activate Live Delivery"}
+              </button>
+            </form>
+
+            {/* Step-by-step instructions */}
+            <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-3">
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                <span>How to Get Your Google App Password (30 Seconds)</span>
+              </h3>
+              <ol className="list-decimal pl-4 space-y-2 text-slate-600 leading-relaxed">
+                <li>
+                  Go to{" "}
+                  <a
+                    href="https://myaccount.google.com/apppasswords"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-bold text-indigo-600 hover:underline"
+                  >
+                    https://myaccount.google.com/apppasswords &rarr;
+                  </a>{" "}
+                  while logged into your Google account (<code>{gmailInput}</code>).
+                </li>
+                <li>
+                  Enter <strong>PadhoOrion</strong> in the App Name box and click <strong>Create</strong>.
+                </li>
+                <li>
+                  Google will display a yellow 16-letter code (e.g. <code>abcd efgh ijkl mnop</code>).
+                </li>
+                <li>
+                  Paste that 16-character code into the box on the left and click <strong>Test Connection & Activate Live Delivery</strong>.
+                </li>
+              </ol>
+              <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-950 text-[11px] leading-relaxed">
+                💡 <strong>Safety Guarantee:</strong> If live Gmail is not yet active, students signing up will see their 6-digit code on screen so registration is never blocked.
+              </div>
             </div>
           </div>
         </div>

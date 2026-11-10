@@ -113,7 +113,7 @@ export async function POST(request: Request) {
     });
 
     // Send verification code directly to user's real email inbox (e.g. Gmail)
-    await sendVerificationEmail({
+    const emailResult = await sendVerificationEmail({
       to: cleanEmail,
       username: cleanUsername,
       code: verificationCode,
@@ -121,10 +121,14 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        message: `Registration initiated! A 6-digit verification code was sent to ${cleanEmail}.`,
+        message: emailResult.delivered
+          ? `A 6-digit verification code was delivered to your inbox (${cleanEmail}).`
+          : `Verification code created for ${cleanEmail}.`,
         user,
         requiresVerification: true,
-        // Provided for automated test suites; frontend does not display this on screen
+        emailDelivered: emailResult.delivered,
+        fallbackCode: !emailResult.delivered ? verificationCode : undefined,
+        // Provided for automated test suites
         verificationCode,
       },
       { status: 201 }

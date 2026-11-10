@@ -10,7 +10,7 @@ export async function sendVerificationEmail({
   to,
   username,
   code,
-}: SendVerificationEmailOptions): Promise<{ success: boolean; error?: string; messageId?: string }> {
+}: SendVerificationEmailOptions): Promise<{ success: boolean; delivered: boolean; error?: string; messageId?: string }> {
   const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER || "";
   const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "";
   const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
@@ -84,9 +84,10 @@ export async function sendVerificationEmail({
   // If SMTP credentials (such as Gmail App Password) are present, dispatch via real SMTP!
   if (smtpUser && smtpPass) {
     try {
+      const isGmail = smtpUser.includes("@gmail.com") || smtpHost.includes("gmail");
       const transporter = nodemailer.createTransport({
-        service: smtpUser.includes("@gmail.com") ? "gmail" : undefined,
-        host: smtpUser.includes("@gmail.com") ? undefined : smtpHost,
+        service: isGmail ? "gmail" : undefined,
+        host: isGmail ? undefined : smtpHost,
         port: smtpPort,
         secure: smtpPort === 465,
         auth: {
@@ -104,12 +105,11 @@ export async function sendVerificationEmail({
       });
 
       console.log(`[EMAIL DISPATCH] Successfully delivered verification email to ${to}. Message ID: ${info.messageId}`);
-      return { success: true, messageId: info.messageId };
+      return { success: true, delivered: true, messageId: info.messageId };
     } catch (err: any) {
       console.error(`[EMAIL DISPATCH ERROR] Failed to send email via SMTP to ${to}:`, err.message);
-      // Return success false with message, but log code so no one is blocked
       console.log(`[EMAIL DISPATCH FALLBACK] Code for ${to}: ${code}`);
-      return { success: false, error: err.message };
+      return { success: false, delivered: false, error: err.message };
     }
   }
 
@@ -120,6 +120,5 @@ export async function sendVerificationEmail({
   console.log(`To enable live Gmail delivery, add GMAIL_USER and GMAIL_APP_PASSWORD to .env`);
   console.log(`----------------------------------------------------------------`);
 
-  return { success: true };
+  return { success: false, delivered: false, error: "SMTP credentials not configured" };
 }
-

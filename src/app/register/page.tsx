@@ -34,6 +34,8 @@ export default function RegisterPage() {
 
   // Verification step state
   const [verificationCodeInput, setVerificationCodeInput] = useState("");
+  const [emailDelivered, setEmailDelivered] = useState(false);
+  const [fallbackCode, setFallbackCode] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,9 +76,19 @@ export default function RegisterPage() {
       }
 
       // Transition to Email Verification Step
-      setVerificationCodeInput("");
+      setEmailDelivered(Boolean(data.emailDelivered));
+      setFallbackCode(data.fallbackCode || null);
+      if (data.fallbackCode) {
+        setVerificationCodeInput(data.fallbackCode);
+      } else {
+        setVerificationCodeInput("");
+      }
       setStep("verify");
-      setSuccessNotice(`Verification code sent! Please check your email inbox at ${email}.`);
+      if (data.emailDelivered) {
+        setSuccessNotice(`Verification code delivered to your Gmail inbox at ${email}!`);
+      } else {
+        setSuccessNotice("Verification code issued. Enter code below to activate your account.");
+      }
     } catch (err: any) {
       setError(err.message || "Failed to register");
     } finally {
@@ -132,7 +144,12 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setSuccessNotice(`A fresh verification code was sent to ${email}. Please check your inbox.`);
+        setEmailDelivered(Boolean(data.emailDelivered));
+        if (data.fallbackCode) {
+          setFallbackCode(data.fallbackCode);
+          setVerificationCodeInput(data.fallbackCode);
+        }
+        setSuccessNotice(data.message || `A fresh code has been issued for ${email}.`);
       } else {
         setError(data.error || "Failed to resend code");
       }
@@ -177,18 +194,42 @@ export default function RegisterPage() {
         {/* STEP 2: VERIFICATION CODE FORM */}
         {step === "verify" ? (
           <div className="space-y-5">
-            <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-center space-y-2">
-              <div className="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center mx-auto shadow-sm">
-                <Mail className="w-5 h-5" />
+            {emailDelivered ? (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-950 rounded-xl text-center space-y-1.5 shadow-xs">
+                <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto shadow-sm">
+                  <Mail className="w-5 h-5 text-white" />
+                </div>
+                <p className="text-xs font-bold text-emerald-900">
+                  Verification Code Delivered to Your Inbox!
+                </p>
+                <p className="text-sm font-black text-emerald-950 font-mono">{email}</p>
+                <p className="text-[11px] text-emerald-800 leading-relaxed pt-1">
+                  Please check your Gmail inbox (including Spam & Promotions) and enter the 6 digits below to activate your account.
+                </p>
               </div>
-              <p className="text-xs text-slate-600 font-medium">
-                We sent a 6-digit verification code to your inbox:
-              </p>
-              <p className="text-sm font-bold text-indigo-950 font-mono">{email}</p>
-              <p className="text-[11px] text-slate-500 pt-1 leading-relaxed">
-                Please check your Gmail or email inbox (including Spam and Promotions folders) and enter the 6-digit code below to activate your account.
-              </p>
-            </div>
+            ) : (
+              <div className="p-4 bg-amber-50 border border-amber-200 text-amber-950 rounded-xl space-y-2 text-center shadow-xs">
+                <div className="w-10 h-10 bg-amber-600 text-white rounded-full flex items-center justify-center mx-auto shadow-sm">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <p className="text-xs font-bold text-amber-900">
+                  Account Verification for <span className="font-mono text-amber-950">{email}</span>
+                </p>
+                {fallbackCode && (
+                  <div className="p-2.5 bg-white border border-amber-300 rounded-lg inline-block my-1 shadow-2xs">
+                    <span className="text-[10px] uppercase font-bold text-stone-500 block">
+                      6-Digit Activation Code
+                    </span>
+                    <span className="text-xl font-black font-mono tracking-widest text-amber-800">
+                      {fallbackCode}
+                    </span>
+                  </div>
+                )}
+                <p className="text-[11px] text-amber-800 leading-relaxed">
+                  Enter the 6-digit code below and click &ldquo;Verify &amp; Activate Account&rdquo; to complete your setup.
+                </p>
+              </div>
+            )}
 
             <form onSubmit={handleVerifyCode} className="space-y-4">
               <div>

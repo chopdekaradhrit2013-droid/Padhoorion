@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       });
 
       // Dispatch new code to Gmail/inbox
-      await sendVerificationEmail({
+      const emailResult = await sendVerificationEmail({
         to: cleanEmail,
         username: existingUser.username,
         code: newCode,
@@ -39,7 +39,11 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         success: true,
-        message: `A new 6-digit verification code has been sent to your inbox (${cleanEmail}).`,
+        message: emailResult.delivered
+          ? `A new 6-digit verification code has been delivered to your inbox (${cleanEmail}).`
+          : `A new 6-digit verification code has been issued for ${cleanEmail}.`,
+        emailDelivered: emailResult.delivered,
+        fallbackCode: !emailResult.delivered ? newCode : undefined,
         verificationCode: newCode,
       });
     }
