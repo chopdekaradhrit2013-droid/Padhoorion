@@ -10,6 +10,8 @@ export function MobileNav() {
   const pathname = usePathname();
   const { user } = useAuth();
 
+  if (!user) return null;
+
   const links = [
     { label: "Home", href: "/", icon: Home },
     { label: "Grades", href: "/grades", icon: Layers },

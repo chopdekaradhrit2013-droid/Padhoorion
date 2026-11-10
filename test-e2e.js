@@ -73,10 +73,18 @@ async function runTests() {
     // 1. Homepage & Announcements
     console.log('\nTesting Homepage & Active Announcements...');
     const homeRes = await request('GET', '/');
-    assert(homeRes.status === 200, 'Homepage renders with status 200');
+    assert(homeRes.status === 200, 'Homepage renders with status 200 (Landing Page for visitors)');
 
     const annRes = await request('GET', '/api/announcements/active');
     assert(annRes.status === 200 && annRes.data.announcements.length >= 2, 'Active announcements endpoint returns announcements');
+
+    // Test Unauthenticated Auth Wall
+    console.log('\nTesting Unauthenticated Access Control (Auth Wall)...');
+    const unauthPageRes = await request('GET', '/grades');
+    assert(unauthPageRes.status === 307 || unauthPageRes.status === 302, 'Unauthenticated visitor to /grades is redirected to /login');
+
+    const unauthApiRes = await request('GET', '/api/resources');
+    assert(unauthApiRes.status === 401, 'Unauthenticated API access to /api/resources returns 401 Unauthorized');
 
     // 2. Student Authentication (Adhrit 7th Grade)
     console.log('\nTesting Authentication & Sessions...');
@@ -115,13 +123,13 @@ async function runTests() {
     console.log('\nTesting Grade Access & Categories...');
     const grades = ['6th Grade', '7th Grade', '8th Grade', '9th Grade', '10th Grade'];
     for (const g of grades) {
-      const gRes = await request('GET', `/api/resources?grade=${encodeURIComponent(g)}`);
+      const gRes = await request('GET', `/api/resources?grade=${encodeURIComponent(g)}`, null, { Cookie: studentCookie });
       assert(gRes.status === 200, `Grade exploration succeeds for ${g}`);
     }
 
     // 6. Resources List & Search
     console.log('\nTesting Resource Discovery & Social Features...');
-    const searchRes = await request('GET', '/api/resources?search=Linear');
+    const searchRes = await request('GET', '/api/resources?search=Linear', null, { Cookie: studentCookie });
     assert(searchRes.status === 200 && searchRes.data.resources.length > 0, 'Resource search returns matching resources');
 
     const firstResource = searchRes.data.resources[0];
@@ -140,7 +148,7 @@ async function runTests() {
     const bookmarkRes = await request('POST', `/api/resources/${resourceId}/bookmark`, {}, { Cookie: newStudentCookie });
     assert(bookmarkRes.status === 200 && bookmarkRes.data.bookmarked === true, 'Bookmark toggle succeeds');
 
-    const downloadRes = await request('POST', `/api/resources/${resourceId}/download`);
+    const downloadRes = await request('POST', `/api/resources/${resourceId}/download`, {}, { Cookie: studentCookie });
     assert(downloadRes.status === 200 && downloadRes.data.downloadsCount > 0, 'Download increment succeeds');
 
     // 9. Comments & Threaded Replies
@@ -170,13 +178,13 @@ async function runTests() {
     assert(progRes.status === 200 && progRes.data.user.grade === '8th Grade', 'Academic Grade Progression succeeds: promoted to 8th Grade');
 
     // Verify historical snapshot on previous resource remains intact
-    const historicalRes = await request('GET', `/api/resources/${resourceId}`);
+    const historicalRes = await request('GET', `/api/resources/${resourceId}`, null, { Cookie: studentCookie });
     assert(historicalRes.data.resource.authorGradeAtPublish === '7th Grade', 'Historical resource preserves 7th Grade snapshot');
     assert(historicalRes.data.resource.author.grade === '8th Grade', 'Author profile reflects updated current grade 8th Grade');
 
     // 11. Public User Profile
     console.log('\nTesting Public User Profile...');
-    const profileRes = await request('GET', `/api/users/profile?username=Adhrit`);
+    const profileRes = await request('GET', `/api/users/profile?username=Adhrit`, null, { Cookie: studentCookie });
     assert(profileRes.status === 200 && profileRes.data.user.username === 'Adhrit', 'Public user profile returns user data');
     assert(profileRes.data.user.grade === '8th Grade', 'Public profile displays live grade tag');
     assert(profileRes.data.user.activities.some((a) => a.type === 'GRADE_CHANGE'), 'Activity history records academic grade progression');

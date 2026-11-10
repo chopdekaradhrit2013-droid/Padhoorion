@@ -19,12 +19,17 @@ import { GRADES, CATEGORIES } from "@/lib/constants";
 import { ResourceCard } from "@/components/ResourceCard";
 import { AuthorIdentity } from "@/components/AuthorIdentity";
 import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
+import { LandingPage } from "@/components/LandingPage";
 import { formatTimeAgo } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const user = await getSessionUser();
+
+  if (!user) {
+    return <LandingPage />;
+  }
 
   const [
     recentResources,
