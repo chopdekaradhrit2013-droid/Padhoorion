@@ -13,6 +13,8 @@ import {
   Shield,
   Layers,
   GraduationCap,
+  HelpCircle,
+  Trophy,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { GRADES } from "@/lib/constants";
@@ -25,6 +27,8 @@ export function Sidebar({ className = "" }: { className?: string }) {
   const navItems = [
     { label: "Home", href: "/", icon: Home },
     { label: "Explore Grades", href: "/grades", icon: Layers },
+    { label: "Request a Note", href: "/requests", icon: HelpCircle },
+    { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
     { label: "Upload Resource", href: "/upload", icon: Upload },
     { label: "My Uploads", href: "/my-uploads", icon: FolderOpen, authRequired: true },
     { label: "Bookmarks", href: "/bookmarks", icon: Bookmark, authRequired: true },

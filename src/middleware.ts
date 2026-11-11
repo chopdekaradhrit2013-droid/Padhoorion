@@ -17,6 +17,8 @@ const PUBLIC_PAGE_ROUTES = [
   "/forgot-password",
   "/verify",
   "/grades",
+  "/leaderboard",
+  "/requests",
 ];
 
 // Public API routes accessible without login
@@ -27,6 +29,7 @@ const PUBLIC_API_PREFIXES = [
   "/api/auth/verify",
   "/api/auth/reset-password",
   "/api/announcements/active",
+  "/api/leaderboard",
 ];
 
 export async function middleware(request: NextRequest) {
@@ -38,7 +41,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/uploads") ||
     pathname === "/favicon.ico" ||
     pathname === "/logo.png" ||
-    pathname === "/icon.png"
+    pathname === "/icon.png" ||
+    pathname === "/manifest.json"
   ) {
     return NextResponse.next();
   }
@@ -60,7 +64,8 @@ export async function middleware(request: NextRequest) {
   const isPublicPage = PUBLIC_PAGE_ROUTES.includes(pathname) || pathname.startsWith("/grades");
   const isPublicApi =
     PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
-    (pathname.startsWith("/api/resources") && request.method === "GET");
+    (pathname.startsWith("/api/resources") && request.method === "GET") ||
+    (pathname.startsWith("/api/requests") && request.method === "GET");
 
   if (isPublicPage || isPublicApi) {
     return NextResponse.next();

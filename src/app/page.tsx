@@ -19,6 +19,7 @@ import { GRADES, CATEGORIES } from "@/lib/constants";
 import { ResourceCard } from "@/components/ResourceCard";
 import { AuthorIdentity } from "@/components/AuthorIdentity";
 import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
+import { ExamCountdownWidget } from "@/components/ExamCountdownWidget";
 import { LandingPage } from "@/components/LandingPage";
 import { formatTimeAgo } from "@/lib/utils";
 
@@ -192,6 +193,9 @@ export default async function HomePage() {
           <BookOpen className="w-72 h-72" />
         </div>
       </section>
+
+      {/* Exam Countdown & Revision Hub */}
+      <ExamCountdownWidget />
 
       {/* Grade Quick Navigation */}
       <section className="space-y-4">

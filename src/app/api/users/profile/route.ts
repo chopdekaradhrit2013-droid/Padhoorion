@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { computeStudentBadges } from "@/app/api/leaderboard/route";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +80,40 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ user });
+    let downloadsCount = 0;
+    let likesCount = 0;
+    let mathUploads = 0;
+    let scienceUploads = 0;
+
+    user.resources.forEach((r) => {
+      downloadsCount += r.downloadsCount || 0;
+      likesCount += r._count?.likes || 0;
+      if (r.subject === "Mathematics") mathUploads++;
+      if (r.subject === "Science") scienceUploads++;
+    });
+
+    const uploadsCount = user._count.resources;
+    const commentsCount = user._count.comments;
+    const points = uploadsCount * 25 + downloadsCount * 5 + likesCount * 10 + commentsCount * 3;
+
+    const badges = computeStudentBadges({
+      uploadsCount,
+      mathUploads,
+      scienceUploads,
+      downloadsCount,
+      likesCount,
+      commentsCount,
+    });
+
+    return NextResponse.json({
+      user: {
+        ...user,
+        points,
+        downloadsCount,
+        likesCount,
+        badges,
+      },
+    });
   } catch (error) {
     console.error("Get profile error:", error);
     return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });

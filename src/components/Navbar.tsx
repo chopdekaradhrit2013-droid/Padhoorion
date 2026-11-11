@@ -24,6 +24,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "./UserAvatar";
 import { GradeTag } from "./GradeTag";
+import { ThemeToggle } from "./ThemeToggle";
 import { GRADES } from "@/lib/constants";
 
 export function Navbar() {
@@ -161,6 +162,8 @@ export function Navbar() {
 
           {/* Right Nav Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
+
             {user ? (
               <>
                 <Link

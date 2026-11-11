@@ -39,6 +39,8 @@ model User {
   reports             Report[]
   announcements       Announcement[]
   activities          Activity[]
+  noteRequests        NoteRequest[]
+  requestResponses    NoteRequestResponse[]
 }
 
 model Resource {
@@ -174,4 +176,34 @@ model BannedEmail {
   reason    String?
   bannedAt  DateTime @default(now())
 }
+
+model NoteRequest {
+  id              String                @id @default(uuid())
+  title           String
+  description     String?
+  grade           String                // "6th Grade", "7th Grade", "8th Grade", "9th Grade", "10th Grade"
+  subject         String                // "Mathematics", "Science", etc.
+  chapter         String?
+  status          String                @default("OPEN") // "OPEN", "FULFILLED"
+  authorId        String
+  fulfilledNoteId String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  author          User                  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  responses       NoteRequestResponse[]
+}
+
+model NoteRequestResponse {
+  id         String      @id @default(uuid())
+  requestId  String
+  authorId   String
+  content    String
+  resourceId String?
+  createdAt  DateTime    @default(now())
+
+  request    NoteRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  author     User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
 

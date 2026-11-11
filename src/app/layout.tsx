@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
+import { PomodoroTimer } from "@/components/PomodoroTimer";
 
 export const metadata: Metadata = {
   title: "PadhoOrion | School Notes-Sharing & Student Community",
@@ -17,6 +19,7 @@ export const metadata: Metadata = {
     shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -27,18 +30,21 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-background text-foreground antialiased selection:bg-[#e9e6dc] selection:text-[#3d3929]">
-        <AuthProvider>
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <div className="flex-1 max-w-7xl w-full mx-auto flex">
-              <Sidebar className="hidden md:flex shrink-0 min-h-[calc(100vh-4rem)]" />
-              <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 md:pb-8 overflow-y-auto max-w-full">
-                {children}
-              </main>
+        <ThemeProvider>
+          <AuthProvider>
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <div className="flex-1 max-w-7xl w-full mx-auto flex">
+                <Sidebar className="hidden md:flex shrink-0 min-h-[calc(100vh-4rem)]" />
+                <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 md:pb-8 overflow-y-auto max-w-full">
+                  {children}
+                </main>
+              </div>
+              <PomodoroTimer />
+              <MobileNav />
             </div>
-            <MobileNav />
-          </div>
-        </AuthProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

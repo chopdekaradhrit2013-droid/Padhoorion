@@ -102,19 +102,42 @@ export default function UserProfilePage() {
               {profileUser.bio || "Active student contributor on PadhoOrion school knowledge sharing community."}
             </p>
 
+            {/* Student Badges Strip */}
+            {profileUser.badges && profileUser.badges.length > 0 && (
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-1">
+                {profileUser.badges.map((b: any) => (
+                  <span
+                    key={b.id}
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${b.color}`}
+                    title={b.desc}
+                  >
+                    <span>{b.icon}</span>
+                    <span>{b.label}</span>
+                  </span>
+                ))}
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-2 text-xs text-slate-500 font-medium">
               <span className="inline-flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-indigo-600" />
+                <Calendar className="w-4 h-4 text-[#c96442]" />
                 <span>Joined {new Date(profileUser.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span>
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-indigo-600" />
+                <BookOpen className="w-4 h-4 text-[#c96442]" />
                 <strong className="text-slate-900 font-bold">{profileUser._count?.resources || 0}</strong> uploads
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <MessageSquare className="w-4 h-4 text-indigo-600" />
+                <MessageSquare className="w-4 h-4 text-[#c96442]" />
                 <strong className="text-slate-900 font-bold">{profileUser._count?.comments || 0}</strong> comments
               </span>
+              <Link
+                href="/leaderboard"
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#fbeee8] border border-[#f5d0c2] text-[#c96442] font-black hover:bg-[#c96442] hover:text-white transition"
+                title="View Rank on Leaderboard"
+              >
+                <span>🏆 {profileUser.points || 0} Reputation Pts</span>
+              </Link>
             </div>
           </div>
 

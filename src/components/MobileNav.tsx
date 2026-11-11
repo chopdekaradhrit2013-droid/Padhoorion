@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Layers, Upload, Bookmark, User } from "lucide-react";
+import { Home, Layers, Upload, Bookmark, User, HelpCircle, Trophy } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 export function MobileNav() {
@@ -15,8 +15,9 @@ export function MobileNav() {
   const links = [
     { label: "Home", href: "/", icon: Home },
     { label: "Grades", href: "/grades", icon: Layers },
+    { label: "Requests", href: "/requests", icon: HelpCircle },
+    { label: "Ranks", href: "/leaderboard", icon: Trophy },
     { label: "Upload", href: "/upload", icon: Upload },
-    { label: "Bookmarks", href: "/bookmarks", icon: Bookmark },
     {
       label: user ? "Profile" : "Log In",
       href: user ? `/profile/${encodeURIComponent(user.username)}` : "/login",

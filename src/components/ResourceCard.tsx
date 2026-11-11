@@ -132,27 +132,27 @@ export function ResourceCard({ resource }: ResourceCardProps) {
   };
 
   return (
-    <div className="group bg-white border border-slate-200 hover:border-indigo-400 rounded-xl shadow-xs hover:shadow-lg transition-all duration-200 flex flex-col justify-between overflow-hidden">
+    <div className="group bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 hover:border-[#c96442] dark:hover:border-[#c96442] rounded-xl shadow-xs hover:shadow-lg transition-all duration-200 flex flex-col justify-between overflow-hidden">
       <div className="p-5">
         {/* Top Badges */}
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-1.5 flex-wrap">
             <GradeTag grade={resource.grade} size="sm" />
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800">
               {resource.category}
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-700">
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300">
               {resource.subject}
             </span>
           </div>
 
           <div className="flex items-center gap-1 text-xs text-slate-400">
             {isPdf ? (
-              <span className="inline-flex items-center gap-1 text-rose-600 font-bold text-[11px] bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100">
+              <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-bold text-[11px] bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900">
                 <FileText className="w-3 h-3" /> PDF
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-indigo-600 font-bold text-[11px] bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+              <span className="inline-flex items-center gap-1 text-[#c96442] font-bold text-[11px] bg-[#fbeee8] dark:bg-[#c96442]/20 px-2 py-0.5 rounded-md border border-[#f5d0c2] dark:border-[#c96442]/30">
                 <ImageIcon className="w-3 h-3" /> Image
               </span>
             )}
@@ -160,24 +160,24 @@ export function ResourceCard({ resource }: ResourceCardProps) {
         </div>
 
         {/* Title */}
-        <Link href={`/resource/${resource.id}`} className="block group-hover:text-indigo-600 transition-colors">
-          <h3 className="font-bold text-base sm:text-lg text-slate-900 group-hover:text-indigo-600 leading-snug line-clamp-2 mb-1.5 tracking-tight">
+        <Link href={`/resource/${resource.id}`} className="block group-hover:text-[#c96442] transition-colors">
+          <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-stone-100 group-hover:text-[#c96442] leading-snug line-clamp-2 mb-1.5 tracking-tight">
             {resource.title}
           </h3>
         </Link>
 
         {/* Chapter & Topic */}
-        <div className="text-xs text-slate-500 mb-2.5 line-clamp-1 font-medium">
-          <span className="text-slate-800 font-semibold">{resource.chapter}</span> • {resource.topic}
+        <div className="text-xs text-slate-500 dark:text-stone-400 mb-2.5 line-clamp-1 font-medium">
+          <span className="text-slate-800 dark:text-stone-200 font-semibold">{resource.chapter}</span> • {resource.topic}
         </div>
 
         {/* Description snippet */}
-        <p className="text-sm text-slate-600 line-clamp-2 font-sans mb-4 leading-relaxed">
+        <p className="text-sm text-slate-600 dark:text-stone-300 line-clamp-2 font-sans mb-4 leading-relaxed">
           {resource.description}
         </p>
 
         {/* Author Identity with Mandatory Grade Tag */}
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+        <div className="pt-3 border-t border-slate-100 dark:border-stone-800 flex items-center justify-between text-xs">
           <AuthorIdentity
             username={resource.author.username}
             grade={resource.author.grade}

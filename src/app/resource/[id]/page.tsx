@@ -27,6 +27,7 @@ import { ConfirmationModal } from "@/components/ConfirmationModal";
 import { ReportModal } from "@/components/ReportModal";
 import { formatTimeAgo, formatFileSize } from "@/lib/utils";
 import { GradeTag } from "@/components/GradeTag";
+import { NoteReaderViewer } from "@/components/NoteReaderViewer";
 
 export default function ResourceDetailPage() {
   const params = useParams();
@@ -386,50 +387,28 @@ export default function ResourceDetailPage() {
           )}
         </div>
 
-        {/* Embedded Viewer */}
-        <div className="p-6 sm:p-8 bg-slate-50 border-t border-slate-100">
-          <div className="flex items-center justify-between mb-4">
+        {/* Interactive In-Browser Note Reader */}
+        <div className="p-6 sm:p-8 bg-slate-50/60 dark:bg-stone-900/60 border-t border-slate-100 dark:border-stone-800 space-y-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Eye className="w-4 h-4 text-indigo-600" />
-              <h3 className="font-bold text-base text-slate-900 tracking-tight">
-                Document Preview ({resource.fileName})
+              <Eye className="w-4 h-4 text-[#c96442]" />
+              <h3 className="font-bold text-base text-slate-900 dark:text-stone-100 tracking-tight">
+                Interactive Note Reader
               </h3>
             </div>
-            <span className="text-xs text-slate-500 font-medium">
+            <span className="text-xs text-slate-500 dark:text-stone-400 font-medium">
               {formatFileSize(resource.fileSize || 0)} • {resource.downloadsCount} total downloads
             </span>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col items-center justify-center min-h-[400px]">
-            {isPdf ? (
-              <iframe
-                src={`${resource.fileUrl}#toolbar=0`}
-                className="w-full h-[600px] border-none"
-                title={resource.title}
-              />
-            ) : isImage ? (
-              <div className="p-4 w-full flex justify-center">
-                <img
-                  src={resource.fileUrl}
-                  alt={resource.title}
-                  className="max-h-[650px] w-auto object-contain rounded-xl border border-slate-100 shadow-sm"
-                />
-              </div>
-            ) : (
-              <div className="p-8 text-center space-y-3">
-                <FileText className="w-16 h-16 text-indigo-600 mx-auto" />
-                <p className="text-sm font-bold text-slate-900">
-                  {resource.fileName}
-                </p>
-                <button
-                  onClick={handleDownload}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700"
-                >
-                  Download to View
-                </button>
-              </div>
-            )}
-          </div>
+          <NoteReaderViewer
+            fileUrl={resource.fileUrl}
+            fileName={resource.fileName}
+            title={resource.title}
+            fileType={resource.fileType}
+            onDownload={handleDownload}
+            downloading={downloading}
+          />
         </div>
       </div>
 

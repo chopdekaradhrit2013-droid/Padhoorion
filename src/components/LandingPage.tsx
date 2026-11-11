@@ -83,7 +83,7 @@ export function LandingPage() {
     {
       num: "04",
       title: "Homework Worksheets",
-      desc: "Teacher-assigned drill sheets, diagrams, and revision exercises with peer verification.",
+      desc: "Classroom homework drill sheets, chapter diagrams, and revision exercises with peer verification.",
       badge: "Practice Drills",
     },
     {

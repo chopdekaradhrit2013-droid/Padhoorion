@@ -1,0 +1,27 @@
+{
+  "name": "PadhoOrion - School Notes & Student Community",
+  "short_name": "PadhoOrion",
+  "description": "Student-to-student school notes, solved worksheets, exam countdowns, and peer study network.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf9f5",
+  "theme_color": "#c96442",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
+
