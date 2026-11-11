@@ -18,6 +18,11 @@ import {
   Plus,
   Key,
   LogIn,
+  Copy,
+  Check,
+  Lock,
+  Shield,
+  Filter,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { ANNOUNCEMENT_DURATIONS } from "@/lib/constants";
@@ -29,7 +34,7 @@ export default function AdminDashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "reports" | "announcements" | "email">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "active-users" | "all-users" | "reports" | "announcements" | "email">("overview");
   const [stats, setStats] = useState<any>(null);
 
   // Email settings state
@@ -44,10 +49,21 @@ export default function AdminDashboardPage() {
   const [sendingTestCode, setSendingTestCode] = useState(false);
   const [testCodeResult, setTestCodeResult] = useState<{ code: string; email: string } | null>(null);
 
-  // Users tab state
-  const [usersList, setUsersList] = useState<any[]>([]);
-  const [userSearch, setUserSearch] = useState("");
-  const [userLoading, setUserLoading] = useState(false);
+  // Active Users tab state (filter=active)
+  const [activeUsersList, setActiveUsersList] = useState<any[]>([]);
+  const [activeUserSearch, setActiveUserSearch] = useState("");
+  const [activeUserLoading, setActiveUserLoading] = useState(false);
+
+  // All Registered Users tab state (admin only - filter=all, active, warned, banned, student, admin)
+  const [allUsersList, setAllUsersList] = useState<any[]>([]);
+  const [allUserSearch, setAllUserSearch] = useState("");
+  const [allUserFilter, setAllUserFilter] = useState<"all" | "active" | "warned" | "banned" | "student" | "admin">("all");
+  const [allUserLoading, setAllUserLoading] = useState(false);
+  const [copiedUserId, setCopiedUserId] = useState<string | null>(null);
+
+  // Delete User confirmation state
+  const [deleteModalUser, setDeleteModalUser] = useState<any | null>(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
 
   // Reports tab state
   const [reportsList, setReportsList] = useState<any[]>([]);
@@ -100,18 +116,33 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const fetchUsers = async () => {
-    setUserLoading(true);
+  const fetchActiveUsers = async (search = activeUserSearch) => {
+    setActiveUserLoading(true);
     try {
-      const res = await fetch(`/api/admin/users?search=${encodeURIComponent(userSearch)}`);
+      const res = await fetch(`/api/admin/users?filter=active&search=${encodeURIComponent(search)}`);
       if (res.ok) {
         const data = await res.json();
-        setUsersList(data.users || []);
+        setActiveUsersList(data.users || []);
       }
     } catch (e) {
       console.error(e);
     } finally {
-      setUserLoading(false);
+      setActiveUserLoading(false);
+    }
+  };
+
+  const fetchAllUsers = async (filter = allUserFilter, search = allUserSearch) => {
+    setAllUserLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users?filter=${filter}&search=${encodeURIComponent(search)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAllUsersList(data.users || []);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setAllUserLoading(false);
     }
   };
 
@@ -216,15 +247,46 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const refreshAllUserData = async () => {
+    await Promise.all([
+      fetchStats(),
+      fetchActiveUsers(),
+      fetchAllUsers(allUserFilter, allUserSearch),
+    ]);
+  };
+
   useEffect(() => {
     if (user?.role === "ADMIN") {
       fetchStats();
-      if (activeTab === "users") fetchUsers();
+      if (activeTab === "active-users") fetchActiveUsers();
+      if (activeTab === "all-users") fetchAllUsers(allUserFilter, allUserSearch);
       if (activeTab === "reports") fetchReports();
       if (activeTab === "announcements") fetchAnnouncements();
       if (activeTab === "email") fetchEmailSettings();
     }
-  }, [user, activeTab]);
+  }, [user, activeTab, allUserFilter]);
+
+  const handleDeleteUser = async () => {
+    if (!deleteModalUser) return;
+    setDeleteSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/users?userId=${deleteModalUser.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete user.");
+      }
+      setFeedbackMessage(data.message || `User ${deleteModalUser.username} permanently deleted.`);
+      setDeleteModalUser(null);
+      await refreshAllUserData();
+      setTimeout(() => setFeedbackMessage(null), 4000);
+    } catch (err: any) {
+      alert(err.message || "Failed to delete user.");
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  };
 
   const handleWarnSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,8 +313,7 @@ export default function AdminDashboardPage() {
         setFeedbackMessage(data.message);
         setWarnModalUser(null);
         setWarnReasonInput("");
-        await fetchUsers();
-        await fetchStats();
+        await refreshAllUserData();
         setTimeout(() => setFeedbackMessage(null), 4000);
       } else {
         alert(data.error || "Failed to issue warning.");
@@ -290,8 +351,7 @@ export default function AdminDashboardPage() {
         setFeedbackMessage(data.message);
         setBanModalUser(null);
         setBanReasonInput("");
-        await fetchUsers();
-        await fetchStats();
+        await refreshAllUserData();
         setTimeout(() => setFeedbackMessage(null), 4000);
       } else {
         alert(data.error || "Failed to ban user.");
@@ -322,8 +382,7 @@ export default function AdminDashboardPage() {
       if (res.ok) {
         setFeedbackMessage(data.message);
         setUnbanModalUser(null);
-        await fetchUsers();
-        await fetchStats();
+        await refreshAllUserData();
         setTimeout(() => setFeedbackMessage(null), 4000);
       } else {
         alert(data.error || "Failed to unban user.");
@@ -387,6 +446,7 @@ export default function AdminDashboardPage() {
         setResetSuccessMsg(
           `Password for ${resetModalUser.username} set to "${newPasswordInput}". You can copy this test password to log in directly.`
         );
+        await refreshAllUserData();
       } else {
         alert(data.error || "Failed to update password.");
       }
@@ -539,15 +599,38 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
-            onClick={() => setActiveTab("users")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "users"
-                ? "bg-indigo-600 text-white shadow-xs"
+            onClick={() => {
+              setActiveTab("active-users");
+              fetchActiveUsers();
+            }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              activeTab === "active-users"
+                ? "bg-emerald-600 text-white shadow-xs"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
-            Registered Users ({stats?.totalUsers || 0})
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+            <span>Active Users ({stats?.activeUsersCount ?? stats?.totalUsers ?? 0})</span>
           </button>
+
+          {/* Admin Exclusive All Registered Users Tab */}
+          {user?.role === "ADMIN" && (
+            <button
+              onClick={() => {
+                setActiveTab("all-users");
+                fetchAllUsers(allUserFilter, allUserSearch);
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === "all-users"
+                  ? "bg-[#c96442] text-white shadow-xs"
+                  : "bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100"
+              }`}
+            >
+              <Lock className="w-3 h-3 text-amber-600" />
+              <span>All Registered Users ({stats?.totalUsers || 0})</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-200 text-amber-950 font-black">Admin Only</span>
+            </button>
+          )}
 
           <button
             onClick={() => setActiveTab("reports")}
@@ -588,29 +671,78 @@ export default function AdminDashboardPage() {
       {activeTab === "overview" && stats && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
-              <span className="text-xs text-slate-400 uppercase font-bold">Total Users</span>
+            <button
+              onClick={() => {
+                setActiveTab("all-users");
+                fetchAllUsers("all");
+              }}
+              className="p-4 bg-white hover:bg-amber-50/40 border border-slate-200 hover:border-[#c96442] rounded-xl shadow-xs text-left transition-all group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400 uppercase font-bold">Total Users</span>
+                <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-200">Admin</span>
+              </div>
               <div className="text-2xl font-extrabold text-slate-900 mt-1">{stats.totalUsers}</div>
-            </div>
+              <div className="text-[11px] text-[#c96442] font-semibold mt-1 flex items-center gap-1 group-hover:underline">
+                <span>View All Directory</span>
+                <span>&rarr;</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab("active-users");
+                fetchActiveUsers();
+              }}
+              className="p-4 bg-white hover:bg-emerald-50/40 border border-slate-200 hover:border-emerald-400 rounded-xl shadow-xs text-left transition-all group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400 uppercase font-bold">Active Users</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              </div>
+              <div className="text-2xl font-extrabold text-emerald-600 mt-1">{stats.activeUsersCount ?? stats.totalUsers}</div>
+              <div className="text-[11px] text-emerald-700 font-semibold mt-1 flex items-center gap-1 group-hover:underline">
+                <span>View Active Only</span>
+                <span>&rarr;</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab("all-users");
+                setAllUserFilter("warned");
+                fetchAllUsers("warned");
+              }}
+              className="p-4 bg-white hover:bg-amber-50/40 border border-slate-200 hover:border-amber-400 rounded-xl shadow-xs text-left transition-all group"
+            >
+              <span className="text-xs text-slate-400 uppercase font-bold">Warned Accounts</span>
+              <div className="text-2xl font-extrabold text-amber-600 mt-1">{stats.warnedUsersCount || 0}</div>
+              <div className="text-[11px] text-amber-700 font-semibold mt-1 flex items-center gap-1 group-hover:underline">
+                <span>Review Strikes</span>
+                <span>&rarr;</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab("all-users");
+                setAllUserFilter("banned");
+                fetchAllUsers("banned");
+              }}
+              className="p-4 bg-white hover:bg-rose-50/40 border border-slate-200 hover:border-rose-400 rounded-xl shadow-xs text-left transition-all group"
+            >
+              <span className="text-xs text-slate-400 uppercase font-bold">Banned Accounts</span>
+              <div className="text-2xl font-extrabold text-rose-600 mt-1">{stats.bannedUsersCount || 0}</div>
+              <div className="text-[11px] text-rose-700 font-semibold mt-1 flex items-center gap-1 group-hover:underline">
+                <span>Review Blacklist</span>
+                <span>&rarr;</span>
+              </div>
+            </button>
 
             <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
               <span className="text-xs text-slate-400 uppercase font-bold">Total Resources</span>
               <div className="text-2xl font-extrabold text-indigo-600 mt-1">{stats.totalResources}</div>
-            </div>
-
-            <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
-              <span className="text-xs text-slate-400 uppercase font-bold">Total Comments</span>
-              <div className="text-2xl font-extrabold text-slate-900 mt-1">{stats.totalComments}</div>
-            </div>
-
-            <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
-              <span className="text-xs text-slate-400 uppercase font-bold">Pending Reports</span>
-              <div className="text-2xl font-extrabold text-rose-600 mt-1">{stats.pendingReportsCount}</div>
-            </div>
-
-            <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
-              <span className="text-xs text-slate-400 uppercase font-bold">Announcements</span>
-              <div className="text-2xl font-extrabold text-indigo-600 mt-1">{stats.activeAnnouncementsCount}</div>
+              <div className="text-[11px] text-slate-400 mt-1 font-sans">{stats.totalComments} comments</div>
             </div>
           </div>
 
@@ -625,21 +757,29 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* TAB 2: REGISTERED USERS MANAGEMENT */}
-      {activeTab === "users" && (
+      {/* TAB 2: ACTIVE USERS MANAGEMENT */}
+      {activeTab === "active-users" && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-xl p-6 space-y-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <h2 className="font-bold text-lg text-slate-900">
-              Registered Student Accounts
-            </h2>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <h2 className="font-extrabold text-lg text-slate-900">
+                  Active Users ({activeUsersList.length})
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Students and members currently in good standing. Banned or suspended accounts are filtered out.
+              </p>
+            </div>
             <div className="relative max-w-xs">
               <input
                 type="text"
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && fetchUsers()}
-                placeholder="Search username, email, grade..."
-                className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                value={activeUserSearch}
+                onChange={(e) => setActiveUserSearch(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && fetchActiveUsers()}
+                placeholder="Search active users..."
+                className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
               />
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2 pointer-events-none" />
             </div>
@@ -653,12 +793,12 @@ export default function AdminDashboardPage() {
                   <th className="p-3">Email Address</th>
                   <th className="p-3">Role</th>
                   <th className="p-3">Uploads</th>
-                  <th className="p-3">Status</th>
+                  <th className="p-3">Standing Status</th>
                   <th className="p-3 text-right">Administrative Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {usersList.map((u) => (
+                {activeUsersList.map((u) => (
                   <tr key={u.id} className="hover:bg-slate-50/60">
                     <td className="p-3">
                       <div className="flex items-center gap-2">
@@ -677,17 +817,7 @@ export default function AdminDashboardPage() {
                     </td>
                     <td className="p-3 text-slate-900 font-semibold">{u._count?.resources ?? 0}</td>
                     <td className="p-3">
-                      {u.isBanned ? (
-                        <div className="space-y-0.5">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300">
-                            <XCircle className="w-3 h-3 text-rose-600" />
-                            BANNED
-                          </span>
-                          <p className="text-[10px] text-rose-600 font-medium truncate max-w-[160px]" title={u.banReason || "Policy violation"}>
-                            Reason: {u.banReason || "Policy violation"}
-                          </p>
-                        </div>
-                      ) : (u.warningCount || 0) > 0 ? (
+                      {(u.warningCount || 0) > 0 ? (
                         <div className="space-y-0.5">
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
                             <AlertTriangle className="w-3 h-3 text-amber-700" />
@@ -731,42 +861,29 @@ export default function AdminDashboardPage() {
                               <span>Set Password</span>
                             </button>
 
-                            {!u.isBanned ? (
-                              <>
-                                <button
-                                  onClick={() => {
-                                    setWarnModalUser(u);
-                                    setWarnReasonInput("");
-                                  }}
-                                  title={`Issue warning to ${u.username} (${u.warningCount || 0}/3)`}
-                                  className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
-                                >
-                                  <AlertTriangle className="w-3 h-3 text-amber-700" />
-                                  <span>Warn</span>
-                                </button>
+                            <button
+                              onClick={() => {
+                                setWarnModalUser(u);
+                                setWarnReasonInput("");
+                              }}
+                              title={`Issue warning to ${u.username} (${u.warningCount || 0}/3)`}
+                              className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
+                            >
+                              <AlertTriangle className="w-3 h-3 text-amber-700" />
+                              <span>Warn</span>
+                            </button>
 
-                                <button
-                                  onClick={() => {
-                                    setBanModalUser(u);
-                                    setBanReasonInput("");
-                                  }}
-                                  title={`Permanently ban ${u.username}`}
-                                  className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
-                                >
-                                  <ShieldAlert className="w-3 h-3" />
-                                  <span>Ban</span>
-                                </button>
-                              </>
-                            ) : (
-                              <button
-                                onClick={() => setUnbanModalUser(u)}
-                                title={`Restore access for ${u.username}`}
-                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
-                              >
-                                <CheckCircle className="w-3 h-3" />
-                                <span>Unban</span>
-                              </button>
-                            )}
+                            <button
+                              onClick={() => {
+                                setBanModalUser(u);
+                                setBanReasonInput("");
+                              }}
+                              title={`Permanently ban ${u.username}`}
+                              className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
+                            >
+                              <ShieldAlert className="w-3 h-3" />
+                              <span>Ban</span>
+                            </button>
                           </>
                         )}
                       </div>
@@ -775,6 +892,336 @@ export default function AdminDashboardPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: ALL REGISTERED USERS (ADMIN ACCESS ONLY) */}
+      {activeTab === "all-users" && user?.role === "ADMIN" && (
+        <div className="space-y-6">
+          {/* Admin Banner */}
+          <div className="p-5 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100 border border-amber-200 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="p-3 rounded-xl bg-[#c96442] text-white shadow-md shadow-[#c96442]/20">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="font-black text-lg text-slate-900 tracking-tight">
+                    All Registered Users Directory
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider">
+                    🔒 Admin Only
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 mt-1">
+                  Complete master directory of every account registered in PadhoOrion (Active, Warned, Banned, Admins, Students).
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => fetchAllUsers(allUserFilter, allUserSearch)}
+                disabled={allUserLoading}
+                className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-amber-300 text-slate-700 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5"
+              >
+                <Clock className="w-3.5 h-3.5 text-amber-700" />
+                <span>{allUserLoading ? "Refreshing..." : "Refresh Directory"}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Directory Stats Counter Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <button
+              onClick={() => {
+                setAllUserFilter("all");
+                fetchAllUsers("all", allUserSearch);
+              }}
+              className={`p-3.5 rounded-xl border text-left transition-all ${
+                allUserFilter === "all"
+                  ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                  : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
+              }`}
+            >
+              <div className="text-[10px] uppercase font-bold tracking-wider opacity-70">All Accounts</div>
+              <div className="text-xl font-black mt-0.5">{stats?.totalUsers || 0}</div>
+            </button>
+
+            <button
+              onClick={() => {
+                setAllUserFilter("active");
+                fetchAllUsers("active", allUserSearch);
+              }}
+              className={`p-3.5 rounded-xl border text-left transition-all ${
+                allUserFilter === "active"
+                  ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                  : "bg-white hover:bg-emerald-50/50 border-slate-200 text-slate-700"
+              }`}
+            >
+              <div className="text-[10px] uppercase font-bold tracking-wider opacity-70">Active Users</div>
+              <div className="text-xl font-black mt-0.5 text-emerald-600 group-hover:text-emerald-700">{stats?.activeUsersCount ?? stats?.totalUsers ?? 0}</div>
+            </button>
+
+            <button
+              onClick={() => {
+                setAllUserFilter("warned");
+                fetchAllUsers("warned", allUserSearch);
+              }}
+              className={`p-3.5 rounded-xl border text-left transition-all ${
+                allUserFilter === "warned"
+                  ? "bg-amber-500 text-amber-950 border-amber-500 shadow-sm"
+                  : "bg-white hover:bg-amber-50/50 border-slate-200 text-slate-700"
+              }`}
+            >
+              <div className="text-[10px] uppercase font-bold tracking-wider opacity-70">Warned (1-2 Strikes)</div>
+              <div className="text-xl font-black mt-0.5 text-amber-600">{stats?.warnedUsersCount || 0}</div>
+            </button>
+
+            <button
+              onClick={() => {
+                setAllUserFilter("banned");
+                fetchAllUsers("banned", allUserSearch);
+              }}
+              className={`p-3.5 rounded-xl border text-left transition-all ${
+                allUserFilter === "banned"
+                  ? "bg-rose-600 text-white border-rose-600 shadow-sm"
+                  : "bg-white hover:bg-rose-50/50 border-slate-200 text-slate-700"
+              }`}
+            >
+              <div className="text-[10px] uppercase font-bold tracking-wider opacity-70">Banned Accounts</div>
+              <div className="text-xl font-black mt-0.5 text-rose-600">{stats?.bannedUsersCount || 0}</div>
+            </button>
+
+            <button
+              onClick={() => {
+                setAllUserFilter("admin");
+                fetchAllUsers("admin", allUserSearch);
+              }}
+              className={`p-3.5 rounded-xl border text-left transition-all ${
+                allUserFilter === "admin"
+                  ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                  : "bg-white hover:bg-indigo-50/50 border-slate-200 text-slate-700"
+              }`}
+            >
+              <div className="text-[10px] uppercase font-bold tracking-wider opacity-70">Administrators</div>
+              <div className="text-xl font-black mt-0.5 text-indigo-600">{stats?.adminUsersCount || 0}</div>
+            </button>
+          </div>
+
+          {/* Search & Filter Toolbar */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xl p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { key: "all", label: "All Users" },
+                  { key: "active", label: "Active Only" },
+                  { key: "warned", label: "Warned" },
+                  { key: "banned", label: "Banned" },
+                  { key: "student", label: "Students" },
+                  { key: "admin", label: "Admins" },
+                ].map((f) => (
+                  <button
+                    key={f.key}
+                    onClick={() => {
+                      setAllUserFilter(f.key as any);
+                      fetchAllUsers(f.key, allUserSearch);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      allUserFilter === f.key
+                        ? "bg-[#c96442] text-white shadow-xs"
+                        : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative max-w-xs">
+                <input
+                  type="text"
+                  value={allUserSearch}
+                  onChange={(e) => setAllUserSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && fetchAllUsers(allUserFilter, allUserSearch)}
+                  placeholder="Search user, email, UUID..."
+                  className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#c96442]/30 focus:border-[#c96442]"
+                />
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2 pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50 text-slate-700 font-bold">
+                    <th className="p-3">User & UUID</th>
+                    <th className="p-3">Email Address</th>
+                    <th className="p-3">Role</th>
+                    <th className="p-3">Standing Status</th>
+                    <th className="p-3">Content</th>
+                    <th className="p-3">Registered At</th>
+                    <th className="p-3 text-right">Admin Suite</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {allUsersList.map((u) => (
+                    <tr key={u.id} className="hover:bg-slate-50/60">
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <UserAvatar name={u.username} avatarUrl={u.avatarUrl} size="xs" />
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-slate-900">{u.username}</span>
+                              <GradeTag grade={u.grade} size="sm" />
+                            </div>
+                            <div className="flex items-center gap-1 mt-0.5 text-[10px] text-slate-400 font-mono">
+                              <span>ID: {u.id.slice(0, 8)}...</span>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(u.id);
+                                  setCopiedUserId(u.id);
+                                  setTimeout(() => setCopiedUserId(null), 2000);
+                                }}
+                                className="hover:text-slate-700 p-0.5 rounded"
+                                title="Copy full User UUID"
+                              >
+                                {copiedUserId === u.id ? (
+                                  <Check className="w-3 h-3 text-emerald-600" />
+                                ) : (
+                                  <Copy className="w-3 h-3" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3 text-slate-600 font-mono text-[11px]">{u.email}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          u.role === "ADMIN" ? "bg-rose-500 text-white" : "bg-slate-100 text-slate-700"
+                        }`}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        {u.isBanned ? (
+                          <div className="space-y-0.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300">
+                              <XCircle className="w-3 h-3 text-rose-600" />
+                              BANNED
+                            </span>
+                            <p className="text-[10px] text-rose-600 font-medium truncate max-w-[160px]" title={u.banReason || "Policy violation"}>
+                              Reason: {u.banReason || "Policy violation"}
+                            </p>
+                          </div>
+                        ) : (u.warningCount || 0) > 0 ? (
+                          <div className="space-y-0.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
+                              <AlertTriangle className="w-3 h-3 text-amber-700" />
+                              WARN {u.warningCount}/3
+                            </span>
+                            <p className="text-[10px] text-amber-800 font-medium truncate max-w-[160px]" title={u.lastWarningReason || "Warning issued"}>
+                              {3 - u.warningCount} left: &ldquo;{u.lastWarningReason}&rdquo;
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <CheckCircle className="w-3 h-3 text-emerald-600" />
+                            ACTIVE (0/3)
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3 text-slate-700">
+                        <span className="font-bold text-slate-900">{u._count?.resources ?? 0}</span> notes
+                        <span className="text-slate-400 block text-[10px]">{u._count?.comments ?? 0} comments</span>
+                      </td>
+                      <td className="p-3 text-slate-500 text-[11px]">
+                        <div>{new Date(u.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+                        <span className="text-[10px] text-slate-400">{formatTimeAgo(u.createdAt)}</span>
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                          {u.id !== user.id && (
+                            <>
+                              <button
+                                onClick={() => handleImpersonate(u)}
+                                disabled={u.isBanned}
+                                title={`Log into ${u.username}'s session for testing`}
+                                className="px-2 py-1 bg-[#faf9f5] hover:bg-stone-200 text-[#3d3929] border border-stone-300 rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                <LogIn className="w-3 h-3 text-[#c96442]" />
+                                <span>Login As</span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setResetModalUser(u);
+                                  setNewPasswordInput("");
+                                  setResetSuccessMsg(null);
+                                }}
+                                title="Set or reset account password for testing"
+                                className="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
+                              >
+                                <Key className="w-3 h-3 text-amber-700" />
+                                <span>Password</span>
+                              </button>
+
+                              {!u.isBanned ? (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setWarnModalUser(u);
+                                      setWarnReasonInput("");
+                                    }}
+                                    title={`Issue warning to ${u.username} (${u.warningCount || 0}/3)`}
+                                    className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
+                                  >
+                                    <AlertTriangle className="w-3 h-3 text-amber-700" />
+                                    <span>Warn</span>
+                                  </button>
+
+                                  <button
+                                    onClick={() => {
+                                      setBanModalUser(u);
+                                      setBanReasonInput("");
+                                    }}
+                                    title={`Permanently ban ${u.username}`}
+                                    className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
+                                  >
+                                    <ShieldAlert className="w-3 h-3" />
+                                    <span>Ban</span>
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  onClick={() => setUnbanModalUser(u)}
+                                  title={`Restore access for ${u.username}`}
+                                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
+                                >
+                                  <CheckCircle className="w-3 h-3" />
+                                  <span>Unban</span>
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => setDeleteModalUser(u)}
+                                title={`Permanently delete user ${u.username}`}
+                                className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1"
+                              >
+                                <Trash2 className="w-3 h-3 text-rose-600" />
+                                <span>Delete</span>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -1537,6 +1984,64 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Permanent Delete User Confirmation */}
+      {deleteModalUser && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border-2 border-rose-200 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-scale-up">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 bg-rose-100 text-rose-700 rounded-xl shadow-xs">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900">
+                    Permanently Delete Account
+                  </h3>
+                  <p className="text-xs text-rose-600 font-bold">
+                    Irreversible Database Purge
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDeleteModalUser(null)}
+                className="text-stone-400 hover:text-stone-700 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 space-y-2 leading-relaxed">
+              <p>
+                Are you sure you want to permanently delete user <strong>{deleteModalUser.username}</strong> ({deleteModalUser.email})?
+              </p>
+              <p className="font-medium text-[11px] text-rose-700">
+                ⚠️ All uploaded study notes, homework solutions, comments, bookmarks, and activities associated with this account will be completely wiped from the database.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeleteModalUser(null)}
+                disabled={deleteSubmitting}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteUser}
+                disabled={deleteSubmitting}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-600/20 disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{deleteSubmitting ? "Purging User..." : "Confirm Delete"}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

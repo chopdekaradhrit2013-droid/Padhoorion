@@ -12,6 +12,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
+    const filter = searchParams.get("filter") || "all";
 
     const where: any = {};
     if (search.trim()) {
@@ -19,7 +20,21 @@ export async function GET(request: Request) {
         { username: { contains: search.trim() } },
         { email: { contains: search.trim() } },
         { grade: { contains: search.trim() } },
+        { id: { contains: search.trim() } },
       ];
+    }
+
+    if (filter === "active") {
+      where.isBanned = false;
+    } else if (filter === "warned") {
+      where.warningCount = { gt: 0 };
+      where.isBanned = false;
+    } else if (filter === "banned") {
+      where.isBanned = true;
+    } else if (filter === "admin") {
+      where.role = "ADMIN";
+    } else if (filter === "student") {
+      where.role = "STUDENT";
     }
 
     const users = await prisma.user.findMany({
@@ -40,10 +55,13 @@ export async function GET(request: Request) {
         lastWarningReason: true,
         lastWarningAt: true,
         createdAt: true,
+        updatedAt: true,
         _count: {
           select: {
             resources: true,
             comments: true,
+            likes: true,
+            bookmarks: true,
           },
         },
       },
@@ -255,5 +273,45 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Admin user moderation error:", error);
     return NextResponse.json({ error: "Failed to execute moderation action" }, { status: 500 });
+  }
+}
+
+// 4. ACTION: PERMANENTLY PURGE / DELETE USER
+export async function DELETE(request: Request) {
+  try {
+    const user = await getAuthUserFromRequest();
+    if (!user) return unauthorizedResponse();
+    if (user.role !== "ADMIN") return forbiddenResponse("Administrator access required.");
+
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+
+    if (!userId) {
+      return NextResponse.json({ error: "Target user ID is required." }, { status: 400 });
+    }
+
+    if (userId === user.id) {
+      return NextResponse.json({ error: "You cannot delete your own administrator account." }, { status: 400 });
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!targetUser) {
+      return NextResponse.json({ error: "User not found." }, { status: 404 });
+    }
+
+    // Cascade delete user and all associated content
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return NextResponse.json({
+      message: `User ${targetUser.username} (${targetUser.email}) and all associated records have been permanently purged from the database.`,
+    });
+  } catch (error) {
+    console.error("Admin delete user error:", error);
+    return NextResponse.json({ error: "Failed to delete user." }, { status: 500 });
   }
 }

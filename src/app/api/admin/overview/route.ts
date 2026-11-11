@@ -12,12 +12,20 @@ export async function GET() {
 
     const [
       totalUsers,
+      activeUsersCount,
+      warnedUsersCount,
+      bannedUsersCount,
+      adminUsersCount,
       totalResources,
       totalComments,
       pendingReportsCount,
       activeAnnouncementsCount,
     ] = await Promise.all([
       prisma.user.count(),
+      prisma.user.count({ where: { isBanned: false } }),
+      prisma.user.count({ where: { warningCount: { gt: 0 }, isBanned: false } }),
+      prisma.user.count({ where: { isBanned: true } }),
+      prisma.user.count({ where: { role: "ADMIN" } }),
       prisma.resource.count(),
       prisma.comment.count(),
       prisma.report.count({ where: { status: "PENDING" } }),
@@ -27,6 +35,10 @@ export async function GET() {
     return NextResponse.json({
       stats: {
         totalUsers,
+        activeUsersCount,
+        warnedUsersCount,
+        bannedUsersCount,
+        adminUsersCount,
         totalResources,
         totalComments,
         pendingReportsCount,
