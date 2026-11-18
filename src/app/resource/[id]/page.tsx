@@ -28,6 +28,7 @@ import { ReportModal } from "@/components/ReportModal";
 import { formatTimeAgo, formatFileSize } from "@/lib/utils";
 import { GradeTag } from "@/components/GradeTag";
 import { NoteReaderViewer } from "@/components/NoteReaderViewer";
+import { downloadResource } from "@/lib/download";
 
 export default function ResourceDetailPage() {
   const params = useParams();
@@ -122,24 +123,16 @@ export default function ResourceDetailPage() {
   };
 
   const handleDownload = async () => {
+    if (!resource) return;
     setDownloading(true);
     try {
-      const res = await fetch(`/api/resources/${id}/download`, { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        const link = document.createElement("a");
-        link.href = data.fileUrl;
-        link.download = data.fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setResource((prev: any) => ({
-          ...prev,
-          downloadsCount: (prev?.downloadsCount || 0) + 1,
-        }));
-      }
+      await downloadResource(resource.id, resource.fileName, resource.fileUrl);
+      setResource((prev: any) => ({
+        ...prev,
+        downloadsCount: (prev?.downloadsCount || 0) + 1,
+      }));
     } catch (err) {
-      console.error(err);
+      console.error("Resource page download error:", err);
     } finally {
       setDownloading(false);
     }

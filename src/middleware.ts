@@ -60,12 +60,16 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Allow public landing page, auth pages, and grades browsing
-  const isPublicPage = PUBLIC_PAGE_ROUTES.includes(pathname) || pathname.startsWith("/grades");
+  // Allow public landing page, auth pages, grades browsing, and note reading
+  const isPublicPage =
+    PUBLIC_PAGE_ROUTES.includes(pathname) ||
+    pathname.startsWith("/grades") ||
+    pathname.startsWith("/resource");
   const isPublicApi =
     PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
     (pathname.startsWith("/api/resources") && request.method === "GET") ||
-    (pathname.startsWith("/api/requests") && request.method === "GET");
+    (pathname.startsWith("/api/requests") && request.method === "GET") ||
+    pathname.includes("/download");
 
   if (isPublicPage || isPublicApi) {
     return NextResponse.next();

@@ -16,6 +16,7 @@ import { AuthorIdentity } from "./AuthorIdentity";
 import { formatTimeAgo } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { GradeTag } from "./GradeTag";
+import { downloadResource } from "@/lib/download";
 
 interface ResourceCardProps {
   resource: {
@@ -105,16 +106,7 @@ export function ResourceCard({ resource }: ResourceCardProps) {
     e.stopPropagation();
     setDownloading(true);
     try {
-      const res = await fetch(`/api/resources/${resource.id}/download`, { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        const link = document.createElement("a");
-        link.href = data.fileUrl;
-        link.download = data.fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+      await downloadResource(resource.id, resource.fileName, resource.fileUrl);
     } catch (err) {
       console.error(err);
     } finally {
