@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { computeStudentBadges } from "@/app/api/leaderboard/route";
+import { computeStudentBadges } from "@/lib/badges";
 
 export const dynamic = "force-dynamic";
 

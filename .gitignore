@@ -35,4 +35,6 @@ next-env.d.ts
 
 # SQLite temporary journal
 *.db-journal
+*.db-wal
+*.db-shm
 

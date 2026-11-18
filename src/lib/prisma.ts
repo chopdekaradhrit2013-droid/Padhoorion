@@ -3,10 +3,6 @@ import path from "path";
 import fs from "fs";
 
 function getDatabaseUrl(): string {
-  if (process.env.DATABASE_URL) {
-    return process.env.DATABASE_URL;
-  }
-
   // On Vercel serverless lambda, filesystem is read-only except /tmp
   if (process.env.VERCEL) {
     const tmpDbPath = path.join("/tmp", "dev.db");
@@ -22,7 +18,19 @@ function getDatabaseUrl(): string {
     }
   }
 
-  return "file:./dev.db";
+  // If DATABASE_URL is set and starts with file:
+  if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")) {
+    // If it is a relative path like file:./dev.db, resolve it to prisma/dev.db
+    const rawPath = process.env.DATABASE_URL.replace("file:", "");
+    if (!path.isAbsolute(rawPath)) {
+      const resolved = path.join(process.cwd(), "prisma", path.basename(rawPath));
+      return `file:${resolved}`;
+    }
+    return process.env.DATABASE_URL;
+  }
+
+  const defaultDbPath = path.join(process.cwd(), "prisma", "dev.db");
+  return `file:${defaultDbPath}`;
 }
 
 const globalForPrisma = globalThis as unknown as {

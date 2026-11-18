@@ -12,6 +12,7 @@ export interface User {
   avatarUrl?: string | null;
   bio?: string | null;
   isVerified: boolean;
+  isBanned?: boolean;
   unreadNotificationsCount?: number;
   impersonatedBy?: string | null;
   banReason?: string | null;

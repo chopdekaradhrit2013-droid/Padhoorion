@@ -73,7 +73,7 @@ export async function GET(
       );
     }
 
-    return new Response(fileBuffer, { status: 200, headers });
+    return new Response(new Uint8Array(fileBuffer), { status: 200, headers });
   } catch (error) {
     console.error("Serve resource file error:", error);
     return NextResponse.json({ error: "Failed to serve file" }, { status: 500 });

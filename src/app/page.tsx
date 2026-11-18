@@ -331,7 +331,7 @@ export default async function HomePage() {
                     avatarUrl={comment.author.avatarUrl}
                     size="sm"
                   />
-                  <span className="text-[11px] text-slate-400">
+                  <span suppressHydrationWarning className="text-[11px] text-slate-400">
                     {formatTimeAgo(comment.createdAt)}
                   </span>
                 </div>

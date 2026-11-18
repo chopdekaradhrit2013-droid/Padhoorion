@@ -1015,17 +1015,17 @@ export default function AdminDashboardPage() {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-1.5">
                 {[
-                  { key: "all", label: "All Users" },
-                  { key: "active", label: "Active Only" },
-                  { key: "warned", label: "Warned" },
-                  { key: "banned", label: "Banned" },
-                  { key: "student", label: "Students" },
-                  { key: "admin", label: "Admins" },
+                  { key: "all" as const, label: "All Users" },
+                  { key: "active" as const, label: "Active Only" },
+                  { key: "warned" as const, label: "Warned" },
+                  { key: "banned" as const, label: "Banned" },
+                  { key: "student" as const, label: "Students" },
+                  { key: "admin" as const, label: "Admins" },
                 ].map((f) => (
                   <button
                     key={f.key}
                     onClick={() => {
-                      setAllUserFilter(f.key as any);
+                      setAllUserFilter(f.key);
                       fetchAllUsers(f.key, allUserSearch);
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${

@@ -36,7 +36,7 @@ export async function GET(
 
     const contentType = mimeTypes[ext] || "application/octet-stream";
 
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(new Uint8Array(fileBuffer), {
       status: 200,
       headers: {
         "Content-Type": contentType,

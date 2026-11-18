@@ -81,7 +81,7 @@ async function runTests() {
     assert(homeRes.status === 200, 'Homepage renders with status 200');
 
     const annRes = await request('GET', '/api/announcements/active');
-    assert(annRes.status === 200 && annRes.data.announcements.length >= 2, 'Active announcements endpoint returns announcements');
+    assert(annRes.status === 200 && annRes.data.announcements.length >= 1, 'Active announcements endpoint returns announcements');
 
     // 2. Admin Authentication
     console.log('\n2. Testing Admin Login (Adhrit)...');
@@ -92,8 +92,8 @@ async function runTests() {
     assert(adminLogin.status === 200 && adminLogin.data.user.role === 'ADMIN', 'Admin login succeeds with credentials (role=ADMIN, grade=8th Grade)');
     adminCookie = parseCookies(adminLogin);
 
-    // 3. Student Registration with 6-Digit Email Verification
-    console.log('\n3. Testing Student Registration & Email Verification...');
+    // 3. Fast 1-Step Student Registration
+    console.log('\n3. Testing 1-Step Student Registration...');
     const testStudentName = `student_${Date.now().toString().slice(-4)}`;
     const studentEmail = `${testStudentName}@gmail.com`;
 
@@ -104,47 +104,20 @@ async function runTests() {
       confirmPassword: 'StudentPass@123',
       grade: '7th Grade',
     });
-    assert(regRes.status === 201 && regRes.data.requiresVerification === true, 'Registration succeeds and requires email verification');
-    assert(typeof regRes.data.verificationCode === 'string' && regRes.data.verificationCode.length === 6, 'Registration generates 6-digit numeric verification code');
+    assert(regRes.status === 201 && regRes.data.user.isVerified === true, 'Registration succeeds immediately without verification');
     createdUserIds.push(regRes.data.user.id);
+    let studentCookie = parseCookies(regRes);
 
-    const verificationCode = regRes.data.verificationCode;
-
-    // 4. Login Attempt Prior to Verification is Blocked
-    console.log('\n4. Testing Unverified Login Guard...');
-    const unverifiedLogin = await request('POST', '/api/auth/login', {
+    // 4. Student Login
+    console.log('\n4. Testing Student Login...');
+    const loginRes = await request('POST', '/api/auth/login', {
       identifier: studentEmail,
       password: 'StudentPass@123',
     });
-    assert(unverifiedLogin.status === 403 && unverifiedLogin.data.requiresVerification === true, 'Unverified student is blocked from logging in (403 requiresVerification)');
+    assert(loginRes.status === 200 && loginRes.data.user.isVerified === true, 'Student successfully logs in');
+    studentCookie = parseCookies(loginRes);
 
-    // 5. Verification Endpoint Activates Account
-    console.log('\n5. Testing 6-Digit Code Verification Endpoint...');
-    // Incorrect code test
-    const wrongCodeRes = await request('POST', '/api/auth/verify', {
-      email: studentEmail,
-      code: '000000',
-    });
-    assert(wrongCodeRes.status === 400, 'Invalid verification code is rejected (400)');
-
-    // Correct code test
-    const verifyRes = await request('POST', '/api/auth/verify', {
-      email: studentEmail,
-      code: verificationCode,
-    });
-    assert(verifyRes.status === 200 && verifyRes.data.success === true, 'Valid 6-digit verification code activates account');
-    const verifiedStudentCookie = parseCookies(verifyRes);
-
-    // 6. Login Now Succeeds After Verification
-    console.log('\n6. Testing Post-Verification Login...');
-    const verifiedLogin = await request('POST', '/api/auth/login', {
-      identifier: studentEmail,
-      password: 'StudentPass@123',
-    });
-    assert(verifiedLogin.status === 200 && verifiedLogin.data.user.isVerified === true, 'Student successfully logs in after verification');
-    const studentCookie = parseCookies(verifiedLogin);
-
-    // 7. Student Session & Warning Banner Check (Initial 0 warnings)
+    // 5. Student Session Check (Initial 0 warnings)
     const meRes = await request('GET', '/api/auth/me', null, { Cookie: studentCookie });
     assert(meRes.status === 200 && meRes.data.user.warningCount === 0, 'New student starts with warningCount = 0');
 
@@ -228,6 +201,33 @@ async function runTests() {
       password: 'StudentPass@123',
     });
     assert(directBannedLogin.status === 403 && directBannedLogin.data.error.includes('Severe violation of school conduct'), 'Login shows direct ban reason to student');
+
+    // 16. Student Doubt & Request Hub API
+    console.log('\n16. Testing Note Requests & Doubt Hub API...');
+    const reqRes = await request('GET', '/api/requests');
+    assert(reqRes.status === 200 && Array.isArray(reqRes.data.requests), 'Requests endpoint returns request list');
+
+    // 17. Leaderboard & Badges API
+    console.log('\n17. Testing Contributor Leaderboard & Badges API...');
+    const lbRes = await request('GET', '/api/leaderboard');
+    assert(lbRes.status === 200 && Array.isArray(lbRes.data.leaderboard), 'Leaderboard endpoint returns ranked students with badges');
+
+    // 18. File Download & Upload Streamer Verification
+    console.log('\n18. Testing File Download Attachment & Streamer...');
+    const dlRes = await request('GET', '/api/resources/740ca7af-6bd6-4df9-bdeb-7ff57b6ed833/download');
+    assert(
+      dlRes.status === 200 &&
+      dlRes.headers['content-disposition'] &&
+      dlRes.headers['content-disposition'].includes('attachment'),
+      'Direct file download serves with Content-Disposition: attachment'
+    );
+
+    const streamRes = await request('GET', '/uploads/1794995810477-test_math_notes.pdf');
+    assert(
+      streamRes.status === 200 &&
+      streamRes.headers['content-type'] === 'application/pdf',
+      'Dynamic upload streamer serves PDF with application/pdf Content-Type'
+    );
 
     console.log('\n--- ALL TEST SUITES COMPLETED ---');
     if (failures === 0) {

@@ -176,7 +176,7 @@ export function ResourceCard({ resource }: ResourceCardProps) {
             avatarUrl={resource.author.avatarUrl}
             size="sm"
           />
-          <span className="text-slate-400 text-[11px]">
+          <span suppressHydrationWarning className="text-slate-400 text-[11px]">
             {formatTimeAgo(resource.createdAt)}
           </span>
         </div>

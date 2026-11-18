@@ -52,7 +52,7 @@ export async function GET(
       headers.set("Content-Length", buffer.length.toString());
       headers.set("Cache-Control", "no-cache");
 
-      return new NextResponse(buffer, { status: 200, headers });
+      return new NextResponse(new Uint8Array(buffer), { status: 200, headers });
     }
 
     // 2. Remote URL Handling
@@ -86,7 +86,7 @@ export async function GET(
     headers.set("Content-Length", fileBuffer.length.toString());
     headers.set("Cache-Control", "no-cache");
 
-    return new NextResponse(fileBuffer, { status: 200, headers });
+    return new NextResponse(new Uint8Array(fileBuffer), { status: 200, headers });
   } catch (error) {
     console.error("Resource GET download error:", error);
     return new NextResponse("Failed to download resource", { status: 500 });

@@ -302,6 +302,12 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
+    // Detach any notifications where this user was the actor
+    await prisma.notification.updateMany({
+      where: { actorId: userId },
+      data: { actorId: null },
+    });
+
     // Cascade delete user and all associated content
     await prisma.user.delete({
       where: { id: userId },
